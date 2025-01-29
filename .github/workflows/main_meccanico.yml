@@ -26,12 +26,27 @@ jobs:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Build and push container image to registry
-      uses: docker/build-push-action@v3
+    - name: Extract metadata for Docker
+      id: meta
+      uses: docker/metadata-action@v4
       with:
-        push: true
-        tags: ghcr.io/${{ secrets.AzureAppService_ContainerUsername_562782e457014fe5b37ceadc4e1578e9 }}/ghcr.io/7hemas7er/meccanico:${{ github.sha }}
-        file: ./Dockerfile
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=sha,prefix=
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v4
+      with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
   deploy:
     runs-on: ubuntu-latest
