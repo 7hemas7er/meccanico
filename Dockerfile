@@ -1,10 +1,10 @@
-# Use Python 3.11 slim image as base
 FROM python:3.11-slim
 
 # Install nginx
 RUN apt-get update && \
-    apt-get install -y nginx && \
-    rm -rf /var/lib/apt/lists/*
+    apt-get install -y nginx supervisor && \
+    rm -rf /var/lib/apt/lists/* && \
+    rm -f /etc/nginx/sites-enabled/default
 
 # Set working directory
 WORKDIR /app
@@ -36,14 +36,12 @@ COPY nginx.conf /etc/nginx/nginx.conf
 # Create SQLite database directory
 RUN mkdir -p data
 
-# Create startup script
-RUN echo '#!/bin/bash\n\
-    nginx\n\
-    uvicorn main:app --host 127.0.0.1 --port 8000\n\
-    ' > /start.sh && chmod +x /start.sh
+# Configure supervisor
+COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
-# Expose port
+# Expose ports
 EXPOSE 80
+EXPOSE 443
 
-# Command to run both nginx and uvicorn
-CMD ["/start.sh"]
+# Start supervisor (which will start both nginx and uvicorn)
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
