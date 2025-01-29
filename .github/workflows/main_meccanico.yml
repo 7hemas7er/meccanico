@@ -57,3 +57,4 @@ jobs:
         publish-profile: ${{ secrets.AzureAppService_PublishProfile_a12309884cce4467ad9a149a41c8ed5e }}
         images: '${{ env.REGISTRY }}/${{ github.repository }}:${{ github.sha }}'
         
+        
