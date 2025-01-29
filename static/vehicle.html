@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="it">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dettagli Veicolo</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="/static/css/style.css" rel="stylesheet">
+</head>
+
+<body class="bg-gray-100">
+    <div class="container mx-auto px-4 py-8">
+        <div class="bg-white shadow-md rounded px-8 pt-6 pb-8">
+            <h1 class="text-2xl font-bold mb-6">Dettagli Veicolo</h1>
+
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2">Targa</label>
+                <p id="vehicle-plate" class="text-xl"></p>
+            </div>
+
+            <div class="mt-8">
+                <h2 class="text-xl font-bold mb-4">Storia Manutenzioni</h2>
+                <div id="activities-list" class="space-y-4">
+                    <!-- Le attività verranno inserite qui dinamicamente -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function loadVehicleData() {
+            const vehicleId = window.location.pathname.split('/').pop();
+
+            try {
+                const response = await fetch(`/api/vehicle/${vehicleId}`);
+                const data = await response.json();
+
+                if (!response.ok) throw new Error('Veicolo non trovato');
+
+                // Mostra targa
+                document.getElementById('vehicle-plate').textContent = data.license_plate;
+
+                // Mostra attività ordinate per data
+                const activitiesList = document.getElementById('activities-list');
+                const sortedActivities = data.activities.sort((a, b) =>
+                    new Date(b.date) - new Date(a.date)
+                );
+
+                activitiesList.innerHTML = sortedActivities.length > 0
+                    ? sortedActivities.map(activity => `
+                        <div class="border-l-4 border-blue-500 pl-4">
+                            <p class="font-bold">${activity.activity}</p>
+                            <p class="text-sm text-gray-600">
+                                Kilometri: ${activity.kilometers.toLocaleString('it-IT')}
+                            </p>
+                            <p class="text-sm text-gray-600">
+                                Data: ${new Date(activity.date).toLocaleDateString('it-IT')}
+                            </p>
+                        </div>
+                    `).join('')
+                    : '<p class="text-gray-500">Nessuna manutenzione registrata</p>';
+
+            } catch (error) {
+                console.error('Errore:', error);
+                alert('Errore nel caricamento dei dati del veicolo');
+            }
+        }
+
+        // Carica i dati all'avvio
+        document.addEventListener('DOMContentLoaded', loadVehicleData);
+    </script>
+</body>
+
+</html>
