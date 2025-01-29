@@ -351,15 +351,25 @@ async function regenerateQR(vehicleId) {
         const response = await fetch(`/api/vehicle/${vehicleId}/qr`);
         const data = await response.json();
 
-        const qrDisplay = document.getElementById('qr-code-display');
-        qrDisplay.classList.remove('hidden');
-        document.getElementById('qr-code').src = data.qr_code;
-        
-        // Aggiungi classe per la stampa
-        qrDisplay.classList.add('printing');
+        // Create a temporary container for the QR code
+        const tempContainer = document.createElement('div');
+        tempContainer.style.position = 'fixed';
+        tempContainer.style.left = '-9999px';
+        tempContainer.innerHTML = `
+            <div class="printing">
+                <img src="${data.qr_code}" style="max-width: 300px; height: auto;">
+            </div>
+        `;
+        document.body.appendChild(tempContainer);
+
+        // Print the QR code
         window.print();
-        // Rimuovi classe dopo la stampa
-        qrDisplay.classList.remove('printing');
+
+        // Remove the temporary container after printing
+        setTimeout(() => {
+            document.body.removeChild(tempContainer);
+        }, 1000);
+
     } catch (error) {
         console.error('Errore:', error);
         alert('Errore nella generazione del QR code');
