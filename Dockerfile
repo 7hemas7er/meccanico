@@ -35,7 +35,7 @@ COPY database.py .
 # Configure nginx
 RUN echo ' \
     server { \
-    listen 80; \
+    listen 443; \
     location / { \
     proxy_pass http://127.0.0.1:8000; \
     proxy_set_header Host $host; \
@@ -54,7 +54,7 @@ RUN echo '#!/bin/bash\n\
     ' > /start.sh && chmod +x /start.sh
 
 # Expose port
-EXPOSE 80
+EXPOSE 443
 
 # Command to run both nginx and uvicorn
 CMD ["/start.sh"]
