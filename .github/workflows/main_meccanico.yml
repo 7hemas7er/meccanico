@@ -36,6 +36,7 @@ jobs:
         context: .
         push: true
         tags: ${{ env.REGISTRY }}/${{ github.repository }}:${{ github.sha }}
+              ${{ env.REGISTRY }}/${{ github.repository }}:latest
         file: ./Dockerfile
         cache-from: type=gha
         cache-to: type=gha,mode=max
