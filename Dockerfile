@@ -18,7 +18,8 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Create directory structure
-RUN mkdir -p static/css static/js
+RUN mkdir -p static/css static/js && \
+    mkdir -p /home/data
 
 # Copy static files
 COPY static/css/style.css static/css/
@@ -52,6 +53,9 @@ RUN echo '#!/bin/bash\n\
     service nginx start\n\
     uvicorn main:app --host 127.0.0.1 --port 8000\n\
     ' > /start.sh && chmod +x /start.sh
+
+# Set environment variable for database path
+ENV DB_PATH=/home/data/service_records.db
 
 # Expose port
 EXPOSE 443

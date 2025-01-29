@@ -1,4 +1,5 @@
 # database.py
+import os
 from typing import List
 from sqlalchemy import String, create_engine, ForeignKey
 from sqlalchemy.orm import (
@@ -10,8 +11,16 @@ from sqlalchemy.orm import (
 )
 from datetime import datetime
 
+# Get database path from environment or use default
+DB_PATH = os.getenv('DB_PATH', '/home/data/service_records.db')
+DB_DIR = os.path.dirname(DB_PATH)
+
+# Create directory if it doesn't exist
+if not os.path.exists(DB_DIR):
+    os.makedirs(DB_DIR)
+
 # Create SQLite engine
-SQLALCHEMY_DATABASE_URL = "sqlite:///./service_records.db"
+SQLALCHEMY_DATABASE_URL = f"sqlite:///{DB_PATH}"
 engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={
                        "check_same_thread": False})
 
