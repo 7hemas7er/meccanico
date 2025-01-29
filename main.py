@@ -61,7 +61,7 @@ app.add_middleware(
 security = HTTPBasic()
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "password123"
-HOST_URL = "http://localhost:8000"
+HOST_URL = "http://meccanico-aregf0d6g6ahf5gn.italynorth-01.azurewebsites.net/"
 
 # Static files configuration
 STATIC_DIR = os.path.join(os.path.dirname(
