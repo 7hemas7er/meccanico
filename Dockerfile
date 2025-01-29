@@ -1,6 +1,11 @@
 # Use Python 3.11 slim image as base
 FROM python:3.11-slim
 
+# Install nginx
+RUN apt-get update && \
+    apt-get install -y nginx && \
+    rm -rf /var/lib/apt/lists/*
+
 # Set working directory
 WORKDIR /app
 
@@ -25,11 +30,20 @@ COPY static/*.html static/
 COPY main.py .
 COPY database.py .
 
+# Copy nginx configuration
+COPY nginx.conf /etc/nginx/nginx.conf
+
 # Create SQLite database directory
 RUN mkdir -p data
 
-# Expose port
-EXPOSE 8000
+# Create startup script
+RUN echo '#!/bin/bash\n\
+    nginx\n\
+    uvicorn main:app --host 127.0.0.1 --port 8000\n\
+    ' > /start.sh && chmod +x /start.sh
 
-# Command to run the application
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Expose port
+EXPOSE 80
+
+# Command to run both nginx and uvicorn
+CMD ["/start.sh"]
