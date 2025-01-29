@@ -223,7 +223,11 @@ async function loadVehicles() {
                     </tr>
                 </thead>
                 <tbody>
-                    ${vehicles.map(vehicle => `
+                    ${vehicles.map(vehicle => {
+            // Sort activities by kilometers in descending order
+            const sortedActivities = vehicle.activities.sort((a, b) => b.kilometers - a.kilometers);
+
+            return `
                         <tr>
                             <td class="border px-4 py-2">${vehicle.license_plate}</td>
                             <td class="border px-4 py-2">
@@ -231,10 +235,10 @@ async function loadVehicles() {
                             </td>
                             <td class="border px-4 py-2">
                                 <ul class="list-none" id="activities-${vehicle.id}">
-                                    ${vehicle.activities.map((a, index) => `
+                                    ${sortedActivities.map((a, index) => `
                                         <li class="mb-2 flex items-center justify-between" id="activity-${vehicle.id}-${index}">
                                             <span>
-                                                ${a.activity} a ${a.kilometers}km 
+                                                ${a.activity} a ${a.kilometers.toLocaleString()}km 
                                                 (${new Date(a.date).toLocaleDateString('it-IT')})
                                             </span>
                                             <div class="space-x-2">
@@ -262,7 +266,7 @@ async function loadVehicles() {
                                 </button>
                             </td>
                         </tr>
-                    `).join('')}
+                    `}).join('')}
                 </tbody>
             </table>
         `;
