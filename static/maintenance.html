@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="it">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Gestione Tipi Manutenzione</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="/static/css/style.css" rel="stylesheet">
+</head>
+
+<body class="bg-gray-100">
+    <nav class="bg-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex justify-between h-16">
+                <div class="flex space-x-7">
+                    <div class="flex items-center space-x-4">
+                        <a href="/" class="text-gray-500 hover:text-gray-700 px-3 py-2 rounded-md">Gestione Veicoli</a>
+                        <a href="/maintenance" class="bg-blue-500 text-white px-3 py-2 rounded-md">Tipi Manutenzione</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold mb-8 text-center">Gestione Tipi Manutenzione</h1>
+
+        <div class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-8">
+            <div class="flex space-x-4 mb-4">
+                <input type="text" id="new-maintenance-type"
+                    class="shadow appearance-none border rounded py-2 px-3 text-gray-700 flex-grow"
+                    placeholder="Nuovo tipo di manutenzione">
+                <button onclick="addMaintenanceType()"
+                    class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
+                    Aggiungi
+                </button>
+            </div>
+            <div id="maintenance-types-list" class="mt-4">
+                <!-- Lista dei tipi di manutenzione -->
+            </div>
+        </div>
+
+        <!-- Modal per la modifica -->
+        <div id="edit-type-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
+            <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+                <h3 class="text-lg font-bold mb-4">Modifica Tipo Manutenzione</h3>
+                <input type="hidden" id="old-type-name">
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">Nuovo Nome</label>
+                    <input type="text" id="edit-type-name"
+                        class="shadow appearance-none border rounded w-full py-2 px-3">
+                </div>
+                <div class="flex justify-end">
+                    <button onclick="closeEditTypeModal()"
+                        class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded mr-2">
+                        Annulla
+                    </button>
+                    <button onclick="saveMaintenanceType()"
+                        class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                        Salva
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/maintenance.js"></script>
+</body>
+
+</html>

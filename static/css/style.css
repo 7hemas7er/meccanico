@@ -1,0 +1,35 @@
+.hidden {
+    display: none;
+}
+
+#qr-code {
+    max-width: 300px;
+    height: auto;
+}
+
+@media print {
+    body * {
+        visibility: hidden;
+    }
+
+    #qr-code-display.printing {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+    }
+
+    #qr-code-display.printing,
+    #qr-code-display.printing * {
+        visibility: visible;
+    }
+
+    #qr-code-display.printing button {
+        display: none;
+    }
+}
+
+/* Stile per centrare il QR code nella pagina */
+#qr-code-display {
+    text-align: center;
+}
