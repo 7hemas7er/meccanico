@@ -1,56 +1,31 @@
-# Dockerfile
+# Use Python 3.11 slim image as base
 FROM python:3.11-slim
 
 # Set working directory
 WORKDIR /app
 
-# Install system dependencies
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-    build-essential \
-    && rm -rf /var/lib/apt/lists/*
-
 # Copy requirements first to leverage Docker cache
 COPY requirements.txt .
 
-# Install Python dependencies
+# Install dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the rest of the application
+# Copy application code
 COPY . .
 
-# Create static directory if it doesn't exist
-RUN mkdir -p static
+# Create static directory
+RUN mkdir -p static/css static/js
 
-# Move HTML files to static directory
-RUN mv *.html static/ || true
-
-# Create volume for SQLite database
-VOLUME /app/data
+# Copy static files to their respective directories
+COPY style.css static/css/
+COPY admin.js static/js/
+COPY maintenance.js static/js/
+COPY script.js static/js/
+COPY vehicle.js static/js/
+COPY *.html static/
 
 # Expose port
 EXPOSE 8000
 
 # Command to run the application
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
-
-# docker-compose.yml
----
-version: '3.8'
-
-services:
-  web:
-    build: .
-    ports:
-      - "8000:8000"
-    volumes:
-      - .:/app
-      - data:/app/data
-    environment:
-      - HOST_URL=http://localhost:8000
-      - ADMIN_USERNAME=admin
-      - ADMIN_PASSWORD=password123
-    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
-
-volumes:
-  data:
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
