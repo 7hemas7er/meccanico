@@ -351,31 +351,34 @@ async function regenerateQR(vehicleId) {
         const response = await fetch(`/api/vehicle/${vehicleId}/qr`);
         const data = await response.json();
 
-        // Create a temporary container for the QR code
-        const tempContainer = document.createElement('div');
-        tempContainer.style.position = 'fixed';
-        tempContainer.style.left = '-9999px';
-        tempContainer.innerHTML = `
-            <div class="printing">
-                <img src="${data.qr_code}" style="max-width: 300px; height: auto;">
-            </div>
-        `;
-        document.body.appendChild(tempContainer);
+        // Aggiorna o crea il div per il QR code
+        let qrDisplay = document.getElementById('qr-code-display');
+        if (!qrDisplay) {
+            qrDisplay = document.createElement('div');
+            qrDisplay.id = 'qr-code-display';
+            document.body.appendChild(qrDisplay);
+        }
 
-        // Print the QR code
+        // Imposta il contenuto
+        qrDisplay.className = 'qr-code-container';
+        qrDisplay.innerHTML = `
+            <img id="qr-code" src="${data.qr_code}" alt="QR Code">
+        `;
+
+        // Aggiungi la classe per la stampa
+        qrDisplay.classList.add('printing');
+
+        // Stampa
         window.print();
 
-        // Remove the temporary container after printing
-        setTimeout(() => {
-            document.body.removeChild(tempContainer);
-        }, 1000);
+        // Rimuovi la classe dopo la stampa
+        qrDisplay.classList.remove('printing');
 
     } catch (error) {
         console.error('Errore:', error);
         alert('Errore nella generazione del QR code');
     }
 }
-
 
 
 // Carica la lista dei veicoli all'avvio

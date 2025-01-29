@@ -2,43 +2,40 @@
     display: none;
 }
 
+.qr-code-container {
+    text-align: center;
+    margin: 20px 0;
+}
+
 #qr-code {
     max-width: 300px;
     height: auto;
 }
 
 @media print {
+
+    /* Nascondi tutti gli elementi */
     body * {
-        visibility: hidden;
+        visibility: hidden !important;
     }
 
-    .printing {
-        visibility: visible;
-        position: fixed;
-        left: 50%;
-        top: 50%;
-        transform: translate(-50%, -50%);
+    /* Mostra solo il QR code */
+    .qr-code-container.printing {
+        visibility: visible !important;
+        position: fixed !important;
+        top: 50% !important;
+        left: 50% !important;
+        transform: translate(-50%, -50%) !important;
     }
 
-    .printing * {
-        visibility: visible;
-    }
-/*
-    #qr-code-display.printing {
-        position: absolute;
-        left: 50%;
-        top: 50%;
-        transform: translate(-50%, -50%);
+    .qr-code-container.printing * {
+        visibility: visible !important;
     }
 
-    #qr-code-display.printing,
-    #qr-code-display.printing * {
-        visibility: visible;
+    /* Nascondi i pulsanti durante la stampa */
+    .qr-code-container.printing button {
+        display: none !important;
     }
-
-    #qr-code-display.printing button {
-        display: none;
-    }*/
 }
 
 /* Stile per centrare il QR code nella pagina */

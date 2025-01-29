@@ -280,6 +280,20 @@ async def update_activity(
     return {"status": "success"}
 
 
+@app.get("/api/vehicle/{vehicle_id}/qr")
+async def regenerate_qr(
+    vehicle_id: str,
+    admin: str = Depends(verify_admin),
+    db: Session = Depends(get_db)
+):
+    vehicle = db.query(Vehicle).filter(Vehicle.id == vehicle_id).first()
+    if not vehicle:
+        raise HTTPException(status_code=404, detail="Veicolo non trovato")
+        
+    qr_code = generate_qr_code(vehicle_id)
+    return {"qr_code": qr_code}
+
+
 @app.on_event("startup")
 async def startup_event():
     init_db()
