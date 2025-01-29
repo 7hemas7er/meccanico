@@ -2,9 +2,11 @@ FROM python:3.11-slim
 
 # Install nginx
 RUN apt-get update && \
-    apt-get install -y nginx supervisor && \
+    apt-get install -y nginx && \
     rm -rf /var/lib/apt/lists/* && \
-    rm -f /etc/nginx/sites-enabled/default
+    rm -f /etc/nginx/sites-enabled/default && \
+    rm -f /etc/nginx/sites-available/default && \
+    rm -rf /usr/share/nginx/html/*
 
 # Set working directory
 WORKDIR /app
@@ -30,18 +32,29 @@ COPY static/*.html static/
 COPY main.py .
 COPY database.py .
 
-# Copy nginx configuration
-COPY nginx.conf /etc/nginx/nginx.conf
+# Configure nginx
+RUN echo ' \
+    server { \
+    listen 80; \
+    location / { \
+    proxy_pass http://127.0.0.1:8000; \
+    proxy_set_header Host $host; \
+    proxy_set_header X-Real-IP $remote_addr; \
+    } \
+    location /static { \
+    alias /app/static; \
+    } \
+    } \
+    ' > /etc/nginx/conf.d/default.conf
 
-# Create SQLite database directory
-RUN mkdir -p data
+# Create startup script
+RUN echo '#!/bin/bash\n\
+    service nginx start\n\
+    uvicorn main:app --host 127.0.0.1 --port 8000\n\
+    ' > /start.sh && chmod +x /start.sh
 
-# Configure supervisor
-COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
-
-# Expose ports
+# Expose port
 EXPOSE 80
-EXPOSE 443
 
-# Start supervisor (which will start both nginx and uvicorn)
-CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+# Command to run both nginx and uvicorn
+CMD ["/start.sh"]
