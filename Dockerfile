@@ -10,19 +10,23 @@ COPY requirements.txt .
 # Install dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application code
-COPY . .
-
-# Create static directory
+# Create directory structure
 RUN mkdir -p static/css static/js
 
-# Copy static files to their respective directories
-COPY style.css static/css/
-COPY admin.js static/js/
-COPY maintenance.js static/js/
-COPY script.js static/js/
-COPY vehicle.js static/js/
-COPY *.html static/
+# Copy static files
+COPY static/css/style.css static/css/
+COPY static/js/admin.js static/js/
+COPY static/js/maintenance.js static/js/
+COPY static/js/script.js static/js/
+COPY static/js/vehicle.js static/js/
+COPY static/*.html static/
+
+# Copy Python files
+COPY main.py .
+COPY database.py .
+
+# Create SQLite database directory
+RUN mkdir -p data
 
 # Expose port
 EXPOSE 8000
