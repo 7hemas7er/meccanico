@@ -76,96 +76,130 @@
 
     <script>
         // Funzioni di filtro
-        function filterActivities() {
-            const typeFilter = document.getElementById('filter-type').value;
-            const startDate = document.getElementById('filter-start-date').value;
-            const endDate = document.getElementById('filter-end-date').value;
+        // Funzioni di filtro
+            function filterActivities() {
+                const typeFilter = document.getElementById('filter-type').value;
+                const startDate = document.getElementById('filter-start-date').value;
+                const endDate = document.getElementById('filter-end-date').value;
 
-            const rows = document.querySelectorAll('#activities-list tr');
-            rows.forEach(row => {
-                const type = row.getAttribute('data-type');
-                const date = row.getAttribute('data-date');
+                const rows = document.querySelectorAll('#activities-list tr');
+                rows.forEach(row => {
+                    const type = row.getAttribute('data-type');
+                    const date = row.getAttribute('data-date');
 
-                let showRow = true;
-                if (typeFilter && type !== typeFilter) showRow = false;
-                if (startDate && date < startDate) showRow = false;
-                if (endDate && date > endDate) showRow = false;
+                    let showRow = true;
+                    if (typeFilter && type !== typeFilter) showRow = false;
+                    if (startDate && date < startDate) showRow = false;
+                    if (endDate && date > endDate) showRow = false;
 
-                row.style.display = showRow ? '' : 'none';
-            });
-        }
-
-        // Carica i dati del veicolo e le sue attività
-        async function loadVehicleHistory() {
-            const vehicleId = new URLSearchParams(window.location.search).get('id');
-            if (!vehicleId) {
-                alert('ID veicolo non specificato');
-                return;
-            }
-
-            try {
-                const response = await fetch(`/api/vehicle/${vehicleId}`);
-                const vehicle = await response.json();
-
-                // Imposta le informazioni del veicolo
-                document.getElementById('vehicle-plate').textContent = `Targa: ${vehicle.license_plate}`;
-
-                // Ordina le attività per data (più recenti prima)
-                const sortedActivities = vehicle.activities.sort((a, b) =>
-                    new Date(b.date) - new Date(a.date)
-                );
-
-                // Popola il filtro dei tipi
-                const types = new Set(vehicle.activities.map(a => a.activity));
-                const typeSelect = document.getElementById('filter-type');
-                types.forEach(type => {
-                    const option = document.createElement('option');
-                    option.value = type;
-                    option.textContent = type;
-                    typeSelect.appendChild(option);
+                    row.style.display = showRow ? '' : 'none';
                 });
-
-                // Popola la tabella
-                const activitiesList = document.getElementById('activities-list');
-                activitiesList.innerHTML = sortedActivities.map(activity => `
-                    <tr data-type="${activity.activity}" data-date="${activity.date}">
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            ${new Date(activity.date).toLocaleDateString('it-IT')}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            ${activity.activity}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            ${activity.kilometers.toLocaleString('it-IT')} km
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                            <div class="flex space-x-2">
-                                <button onclick="editActivity('${vehicleId}', '${activity.id}')"
-                                        class="text-blue-600 hover:text-blue-900">
-                                    Modifica
-                                </button>
-                                <button onclick="deleteActivity('${vehicleId}', '${activity.id}')"
-                                        class="text-red-600 hover:text-red-900">
-                                    Elimina
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                `).join('');
-
-                // Aggiungi event listener per i filtri
-                document.getElementById('filter-type').addEventListener('change', filterActivities);
-                document.getElementById('filter-start-date').addEventListener('change', filterActivities);
-                document.getElementById('filter-end-date').addEventListener('change', filterActivities);
-
-            } catch (error) {
-                console.error('Errore:', error);
-                alert('Errore nel caricamento della cronologia');
             }
-        }
 
-        // Carica i dati all'avvio
-        document.addEventListener('DOMContentLoaded', loadVehicleHistory);
+            // Carica i dati del veicolo e le sue attività
+            async function loadVehicleHistory() {
+                const vehicleId = new URLSearchParams(window.location.search).get('id');
+                if (!vehicleId) {
+                    alert('ID veicolo non specificato');
+                    return;
+                }
+
+                try {
+                    const response = await fetch(`/api/vehicle/${vehicleId}`);
+                    const vehicle = await response.json();
+
+                    // Imposta le informazioni del veicolo
+                    document.getElementById('vehicle-plate').textContent = `Targa: ${vehicle.license_plate}`;
+
+                    // Ordina le attività per data (più recenti prima)
+                    const sortedActivities = vehicle.activities.sort((a, b) =>
+                        new Date(b.date) - new Date(a.date)
+                    );
+
+                    // Popola il filtro dei tipi (inclusi tipi personalizzati)
+                    const types = new Set(vehicle.activities.map(a => a.activity));
+                    const typeSelect = document.getElementById('filter-type');
+                    typeSelect.innerHTML = '<option value="">Tutti i tipi</option>';
+                    types.forEach(type => {
+                        const option = document.createElement('option');
+                        option.value = type;
+                        option.textContent = type;
+                        typeSelect.appendChild(option);
+                    });
+
+                    // Popola la tabella
+                    const activitiesList = document.getElementById('activities-list');
+                    activitiesList.innerHTML = sortedActivities.map(activity => `
+            <tr data-type="${activity.activity}" data-date="${activity.date}">
+                <td class="px-6 py-4 whitespace-nowrap">
+                    ${new Date(activity.date).toLocaleDateString('it-IT')}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    ${activity.activity}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    ${activity.kilometers.toLocaleString('it-IT')} km
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <div class="flex space-x-2">
+                        <button onclick="editActivity('${vehicleId}', '${activity.id}')"
+                                class="text-blue-600 hover:text-blue-900">
+                            Modifica
+                        </button>
+                        <button onclick="deleteActivity('${vehicleId}', '${activity.id}')"
+                                class="text-red-600 hover:text-red-900">
+                            Elimina
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+
+                    // Aggiungi event listener per i filtri
+                    document.getElementById('filter-type').addEventListener('change', filterActivities);
+                    document.getElementById('filter-start-date').addEventListener('change', filterActivities);
+                    document.getElementById('filter-end-date').addEventListener('change', filterActivities);
+
+                } catch (error) {
+                    console.error('Errore:', error);
+                    alert('Errore nel caricamento della cronologia');
+                }
+            }
+
+            // Funzione per modificare un'attività
+            async function editActivity(vehicleId, activityId) {
+                try {
+                    // Redirect to admin page with query parameters
+                    window.location.href = `/admin?edit=true&vehicleId=${vehicleId}&activityId=${activityId}`;
+                } catch (error) {
+                    console.error('Errore:', error);
+                    alert('Errore nell\'apertura della modifica');
+                }
+            }
+
+            // Funzione per eliminare un'attività
+            async function deleteActivity(vehicleId, activityId) {
+                if (!confirm('Sei sicuro di voler eliminare questa attività?')) {
+                    return;
+                }
+
+                try {
+                    const response = await fetch(`/api/vehicle/${vehicleId}/activity/${activityId}`, {
+                        method: 'DELETE'
+                    });
+
+                    if (!response.ok) throw new Error('Errore nell\'eliminazione');
+
+                    // Ricarica i dati
+                    loadVehicleHistory();
+                } catch (error) {
+                    console.error('Errore:', error);
+                    alert('Errore durante l\'eliminazione dell\'attività');
+                }
+            }
+
+            // Carica i dati all'avvio
+            document.addEventListener('DOMContentLoaded', loadVehicleHistory);
     </script>
 </body>
 
