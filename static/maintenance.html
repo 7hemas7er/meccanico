@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin - Gestione Tipi Manutenzione</title>
+    <title>Admin - Tipi Manutenzione</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link href="/static/css/style.css" rel="stylesheet">
 </head>
@@ -15,9 +15,15 @@
             <div class="flex justify-between h-16">
                 <div class="flex space-x-7">
                     <div class="flex items-center space-x-4">
-                        <a href="/" class="text-gray-500 hover:text-gray-700 px-3 py-2 rounded-md">Gestione Veicoli</a>
+                        <a href="/admin" class="text-gray-500 hover:text-gray-700 px-3 py-2 rounded-md">Gestione
+                            Veicoli</a>
                         <a href="/maintenance" class="bg-blue-500 text-white px-3 py-2 rounded-md">Tipi Manutenzione</a>
+                        <a href="/settings"
+                            class="text-gray-500 hover:text-gray-700 px-3 py-2 rounded-md">Impostazioni</a>
                     </div>
+                </div>
+                <div class="flex items-center">
+                    <button id="logout-btn" class="text-red-500 hover:text-red-700 px-3 py-2 rounded-md">Logout</button>
                 </div>
             </div>
         </div>
@@ -26,46 +32,106 @@
     <div class="container mx-auto px-4 py-8">
         <h1 class="text-3xl font-bold mb-8 text-center">Gestione Tipi Manutenzione</h1>
 
+        <!-- Form nuovo tipo manutenzione -->
         <div class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-8">
-            <div class="flex space-x-4 mb-4">
-                <input type="text" id="new-maintenance-type"
-                    class="shadow appearance-none border rounded py-2 px-3 text-gray-700 flex-grow"
-                    placeholder="Nuovo tipo di manutenzione">
-                <button onclick="addMaintenanceType()"
-                    class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
-                    Aggiungi
-                </button>
+            <h2 class="text-xl font-bold mb-4">Aggiungi Nuovo Tipo Manutenzione</h2>
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="new-maintenance-type">
+                    Nome Tipo
+                </label>
+                <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700"
+                    id="new-maintenance-type" type="text" placeholder="Es. Cambio Olio">
             </div>
-            <div id="maintenance-types-list" class="mt-4">
-                <!-- Lista dei tipi di manutenzione -->
-            </div>
+            <button onclick="addMaintenanceType()"
+                class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                Aggiungi Tipo
+            </button>
         </div>
 
-        <!-- Modal per la modifica -->
-        <div id="edit-type-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
-            <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-                <h3 class="text-lg font-bold mb-4">Modifica Tipo Manutenzione</h3>
-                <input type="hidden" id="old-type-name">
-                <div class="mb-4">
-                    <label class="block text-gray-700 text-sm font-bold mb-2">Nuovo Nome</label>
-                    <input type="text" id="edit-type-name"
-                        class="shadow appearance-none border rounded w-full py-2 px-3">
-                </div>
-                <div class="flex justify-end">
-                    <button onclick="closeEditTypeModal()"
-                        class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded mr-2">
-                        Annulla
-                    </button>
-                    <button onclick="saveMaintenanceType()"
-                        class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-                        Salva
-                    </button>
-                </div>
+        <!-- Lista tipi manutenzione -->
+        <div class="bg-white shadow-md rounded px-8 pt-6 pb-8">
+            <h2 class="text-xl font-bold mb-4">Lista Tipi Manutenzione</h2>
+            <div id="maintenance-types-list">
+                <!-- I tipi di manutenzione verranno inseriti qui -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal per modifica tipo -->
+    <div id="edit-type-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
+        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <h3 class="text-lg font-bold mb-4">Modifica Tipo Manutenzione</h3>
+            <input type="hidden" id="old-type-name">
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2">Nome Tipo</label>
+                <input type="text" id="edit-type-name" class="shadow appearance-none border rounded w-full py-2 px-3">
+            </div>
+            <div class="flex justify-end">
+                <button onclick="closeEditTypeModal()"
+                    class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded mr-2">
+                    Annulla
+                </button>
+                <button onclick="saveMaintenanceType()"
+                    class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                    Salva
+                </button>
             </div>
         </div>
     </div>
 
     <script src="/static/js/maintenance.js"></script>
+    <script>
+        // Check authentication on page load
+        document.addEventListener('DOMContentLoaded', function () {
+            checkAuth();
+
+            // Setup logout button
+            document.getElementById('logout-btn').addEventListener('click', logout);
+        });
+
+        // Auth check function
+        function checkAuth() {
+            // We're using cookies now, so just check if we can access protected content
+            fetch('/api/user', {
+                credentials: 'include'
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        window.location.href = '/login';
+                    }
+                })
+                .catch(() => {
+                    window.location.href = '/login';
+                });
+        }
+
+        // Logout function
+        function logout() {
+            // Send request to remove the cookie
+            fetch('/logout', {
+                method: 'POST',
+                credentials: 'include'
+            }).then(() => {
+                window.location.href = '/login';
+            });
+        }
+
+        // Add credentials to fetch requests
+        const originalFetch = window.fetch;
+        window.fetch = function (url, options = {}) {
+            // Always include credentials for cookies
+            options.credentials = 'include';
+
+            return originalFetch(url, options)
+                .then(response => {
+                    // Redirect to login if unauthorized
+                    if (response.status === 401) {
+                        window.location.href = '/login';
+                    }
+                    return response;
+                });
+        };
+    </script>
 </body>
 
 </html>

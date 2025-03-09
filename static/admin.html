@@ -15,10 +15,15 @@
             <div class="flex justify-between h-16">
                 <div class="flex space-x-7">
                     <div class="flex items-center space-x-4">
-                        <a href="/" class="bg-blue-500 text-white px-3 py-2 rounded-md">Gestione Veicoli</a>
+                        <a href="/admin" class="bg-blue-500 text-white px-3 py-2 rounded-md">Gestione Veicoli</a>
                         <a href="/maintenance" class="text-gray-500 hover:text-gray-700 px-3 py-2 rounded-md">Tipi
                             Manutenzione</a>
+                        <a href="/settings"
+                            class="text-gray-500 hover:text-gray-700 px-3 py-2 rounded-md">Impostazioni</a>
                     </div>
+                </div>
+                <div class="flex items-center">
+                    <button id="logout-btn" class="text-red-500 hover:text-red-700 px-3 py-2 rounded-md">Logout</button>
                 </div>
             </div>
         </div>
@@ -72,18 +77,21 @@
                 </div>
                 <div class="mb-4">
                     <label class="block text-gray-700 text-sm font-bold mb-2">Kilometri</label>
-                    <input type="number" id="activity-km" class="shadow appearance-none border rounded w-full py-2 px-3">
+                    <input type="number" id="activity-km"
+                        class="shadow appearance-none border rounded w-full py-2 px-3">
                 </div>
                 <div class="mb-4">
                     <label class="block text-gray-700 text-sm font-bold mb-2">Data</label>
-                    <input type="date" id="activity-date" class="shadow appearance-none border rounded w-full py-2 px-3">
+                    <input type="date" id="activity-date"
+                        class="shadow appearance-none border rounded w-full py-2 px-3">
                 </div>
                 <div class="flex justify-end">
                     <button onclick="closeActivityModal()"
                         class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded mr-2">
                         Annulla
                     </button>
-                    <button id="save-activity-btn" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                    <button id="save-activity-btn"
+                        class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
                         Salva
                     </button>
                 </div>
@@ -92,6 +100,61 @@
     </div>
     </div>
     <script src="/static/js/admin.js"></script>
+    <script>
+        // Check authentication on page load
+        document.addEventListener('DOMContentLoaded', function () {
+            checkAuth();
+
+            // Setup logout button
+            document.getElementById('logout-btn').addEventListener('click', logout);
+        });
+
+        // Auth check function
+        function checkAuth() {
+            
+            if (!token) {
+                window.location.href = '/login';
+                return null;
+            }
+            return token;
+        }
+
+        // Logout function
+        function logout() {
+                // Invia una richiesta per rimuovere il cookie
+                fetch('/logout', {
+                    method: 'POST',
+                    credentials: 'include'
+                }).then(() => {
+                    window.location.href = '/login';
+                });
+            }
+
+        // Add authorization header to fetch requests
+        const originalFetch = window.fetch;
+        window.fetch = function (url, options = {}) {
+            const token = localStorage.getItem('token');
+
+            if (token && !url.includes('/token')) {
+                options.headers = options.headers || {};
+
+                // Don't override if Authorization is already set
+                if (!options.headers.Authorization && !options.headers.authorization) {
+                    options.headers.Authorization = `Bearer ${token}`;
+                }
+            }
+
+            return originalFetch(url, options)
+                .then(response => {
+                    // Redirect to login if unauthorized
+                    if (response.status === 401) {
+                        localStorage.removeItem('token');
+                        window.location.href = '/login';
+                    }
+                    return response;
+                });
+        };
+    </script>
 </body>
 
 </html>
