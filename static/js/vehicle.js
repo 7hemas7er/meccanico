@@ -6,13 +6,28 @@ async function loadVehicleData() {
         const data = await response.json();
 
         if (response.ok) {
-            document.getElementById('info-license-plate').textContent = data.license_plate;
-            document.getElementById('info-service-date').textContent =
-                data.service_date ? new Date(data.service_date).toLocaleDateString('it-IT') : 'Non disponibile';
-            document.getElementById('info-next-service').textContent =
-                data.next_service ? new Date(data.next_service).toLocaleDateString('it-IT') : 'Non disponibile';
-            document.getElementById('info-operations').textContent =
-                data.operations.length > 0 ? data.operations.join(', ') : 'Nessuna operazione registrata';
+            document.getElementById('vehicle-plate').textContent = data.license_plate;
+
+            // Ordina le attività per data (più recenti prima)
+            const sortedActivities = data.activities.sort((a, b) =>
+                new Date(b.date) - new Date(a.date)
+            );
+
+            // Popola la lista delle attività
+            const activitiesList = document.getElementById('activities-list');
+            activitiesList.innerHTML = sortedActivities.length > 0
+                ? sortedActivities.map(activity => `
+                    <div class="border-l-4 border-blue-500 pl-4 mb-4">
+                        <p class="font-bold">${activity.activity}</p>
+                        <p class="text-sm text-gray-600">
+                            Kilometri: ${activity.kilometers.toLocaleString('it-IT')}
+                        </p>
+                        <p class="text-sm text-gray-600">
+                            Data: ${new Date(activity.date).toLocaleDateString('it-IT')}
+                        </p>
+                    </div>
+                `).join('')
+                : '<p class="text-gray-500">Nessuna manutenzione registrata</p>';
         } else {
             alert('Veicolo non trovato');
         }

@@ -339,6 +339,16 @@ async def add_activity(
     if not vehicle:
         raise HTTPException(status_code=404, detail="Veicolo non trovato")
 
+    # Verifica se esiste già il tipo di manutenzione, altrimenti lo crea
+    existing_type = db.query(MaintenanceType).filter(
+        MaintenanceType.name == activity.activity).first()
+
+    if not existing_type and activity.activity != "altro":
+        # Se non esiste e non è "altro" (che è il valore del dropdown, non un'attività reale)
+        # Crea un nuovo tipo di manutenzione
+        new_type = MaintenanceType(name=activity.activity)
+        db.add(new_type)
+
     new_activity = Activity(
         vehicle_id=vehicle_id,
         activity=activity.activity,

@@ -4,6 +4,16 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Setup logout button
     document.getElementById('logout-btn').addEventListener('click', logout);
+
+    // Inizializza la pagina
+    loadVehicles();
+    loadMaintenanceTypes();
+
+    // Aggiungi event listener per il change del select se il modal è aperto
+    const activitySelect = document.getElementById('activity-name');
+    if (activitySelect) {
+        activitySelect.addEventListener('change', toggleCustomActivityField);
+    }
 });
 
 // Auth check function
@@ -49,7 +59,6 @@ window.fetch = function (url, options = {}) {
         });
 };
 
-
 async function addVehicle() {
     const licensePlate = document.getElementById('license-plate').value;
     if (!licensePlate) {
@@ -73,7 +82,7 @@ async function addVehicle() {
 
         document.getElementById('qr-code-display').classList.remove('hidden');
         document.getElementById('qr-code').src = data.qr_code;
-        
+
         document.getElementById('license-plate').value = '';
         loadVehicles();
 
@@ -82,7 +91,6 @@ async function addVehicle() {
         alert('Errore durante la creazione del veicolo');
     }
 }
-
 
 // Funzione per caricare i tipi di manutenzione
 async function loadMaintenanceTypes() {
@@ -96,27 +104,32 @@ async function loadMaintenanceTypes() {
             `<option value="${type}">${type}</option>`
         ).join('');
 
+        // Aggiungi l'opzione "Altro" alla fine
+        select.innerHTML += `<option value="altro">Altro (personalizzato)</option>`;
+
         // Aggiorna la lista dei tipi
         const list = document.getElementById('maintenance-types-list');
-        list.innerHTML = `
-            <ul class="divide-y divide-gray-200">
-                ${types.map(type => `
-                    <li class="py-2 flex justify-between items-center">
-                        <span>${type}</span>
-                        <div>
-                            <button onclick="openEditTypeModal('${type}')"
-                                class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded mr-2">
-                                Modifica
-                            </button>
-                            <button onclick="deleteMaintenanceType('${type}')"
-                                class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded">
-                                Elimina
-                            </button>
-                        </div>
-                    </li>
-                `).join('')}
-            </ul>
-        `;  
+        if (list) {  // Check if the element exists (only on maintenance page)
+            list.innerHTML = `
+                <ul class="divide-y divide-gray-200">
+                    ${types.map(type => `
+                        <li class="py-2 flex justify-between items-center">
+                            <span>${type}</span>
+                            <div>
+                                <button onclick="openEditTypeModal('${type}')"
+                                    class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded mr-2">
+                                    Modifica
+                                </button>
+                                <button onclick="deleteMaintenanceType('${type}')"
+                                    class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded">
+                                    Elimina
+                                </button>
+                            </div>
+                        </li>
+                    `).join('')}
+                </ul>
+            `;
+        }
     } catch (error) {
         console.error('Errore:', error);
     }
@@ -149,18 +162,17 @@ async function addMaintenanceType() {
     }
 }
 
-// Modifica la funzione openActivityModal per caricare i tipi
-async function openActivityModal(vehicleId) {
-    document.getElementById('activity-modal').classList.remove('hidden');
-    document.getElementById('current-vehicle-id').value = vehicleId;
-    await loadMaintenanceTypes();
-}
+// Funzione per mostrare/nascondere il campo di testo personalizzato
+function toggleCustomActivityField() {
+    const select = document.getElementById('activity-name');
+    const customContainer = document.getElementById('custom-activity-container');
 
-// Aggiungi il caricamento dei tipi all'avvio
-document.addEventListener('DOMContentLoaded', () => {
-    loadVehicles();
-    loadMaintenanceTypes();
-});
+    if (select.value === 'altro') {
+        customContainer.classList.remove('hidden');
+    } else {
+        customContainer.classList.add('hidden');
+    }
+}
 
 // Funzione per aprire il modal di aggiunta
 function openActivityModal(vehicleId) {
@@ -172,6 +184,13 @@ function openActivityModal(vehicleId) {
     document.getElementById('activity-date').value = new Date().toISOString().split('T')[0];
     document.getElementById('modal-title').textContent = 'Aggiungi Attività';
     document.getElementById('save-activity-btn').onclick = saveActivity;
+
+    // Nascondi il campo personalizzato all'inizio
+    document.getElementById('custom-activity-container').classList.add('hidden');
+    document.getElementById('custom-activity').value = '';
+
+    // Aggiungi event listener per il change del select
+    document.getElementById('activity-name').addEventListener('change', toggleCustomActivityField);
 }
 
 function closeActivityModal() {
@@ -180,13 +199,25 @@ function closeActivityModal() {
     document.getElementById('activity-km').value = '';
     document.getElementById('activity-date').value = '';
     document.getElementById('activity-index').value = '';
+    document.getElementById('custom-activity').value = '';
+    document.getElementById('custom-activity-container').classList.add('hidden');
 }
 
 async function saveActivity() {
     const vehicleId = document.getElementById('current-vehicle-id').value;
-    const activity = document.getElementById('activity-name').value;
+    let activity = document.getElementById('activity-name').value;
     const kilometers = parseInt(document.getElementById('activity-km').value);
     const date = document.getElementById('activity-date').value;
+
+    // Se è selezionato "Altro", prendi il valore personalizzato
+    if (activity === 'altro') {
+        const customActivity = document.getElementById('custom-activity').value.trim();
+        if (!customActivity) {
+            alert('Inserisci un tipo di manutenzione personalizzato');
+            return;
+        }
+        activity = customActivity;
+    }
 
     if (!activity || !kilometers || !date) {
         alert('Compila tutti i campi');
@@ -231,6 +262,7 @@ async function saveActivity() {
         alert('Errore durante il salvataggio');
     }
 }
+
 // Funzione per filtrare i veicoli
 function filterVehicles() {
     const searchTerm = document.getElementById('search-plate').value.toLowerCase();
@@ -354,20 +386,55 @@ function editActivity(vehicleId, activityIndex, activity) {
     document.getElementById('activity-modal').classList.remove('hidden');
     document.getElementById('current-vehicle-id').value = vehicleId;
     document.getElementById('activity-index').value = activityIndex;
-    document.getElementById('activity-name').value = activity.activity;
+
+    // Controlla se il tipo di attività esiste nel select
+    const activitySelect = document.getElementById('activity-name');
+    let activityExists = false;
+
+    for (let i = 0; i < activitySelect.options.length; i++) {
+        if (activitySelect.options[i].value === activity.activity) {
+            activityExists = true;
+            break;
+        }
+    }
+
+    if (activityExists) {
+        // Se esiste, selezionalo
+        activitySelect.value = activity.activity;
+        document.getElementById('custom-activity-container').classList.add('hidden');
+    } else {
+        // Se non esiste, seleziona "Altro" e mostra il campo personalizzato
+        activitySelect.value = 'altro';
+        document.getElementById('custom-activity-container').classList.remove('hidden');
+        document.getElementById('custom-activity').value = activity.activity;
+    }
+
     document.getElementById('activity-km').value = activity.kilometers;
     document.getElementById('activity-date').value = new Date(activity.date).toISOString().split('T')[0];
     document.getElementById('modal-title').textContent = 'Modifica Attività';
     document.getElementById('save-activity-btn').onclick = updateActivity;
+
+    // Aggiungi event listener per il change del select
+    document.getElementById('activity-name').addEventListener('change', toggleCustomActivityField);
 }
 
 // Funzione per aggiornare un'attività
 async function updateActivity() {
     const vehicleId = document.getElementById('current-vehicle-id').value;
     const activityIndex = document.getElementById('activity-index').value;
-    const activity = document.getElementById('activity-name').value;
+    let activity = document.getElementById('activity-name').value;
     const kilometers = document.getElementById('activity-km').value;
     const date = document.getElementById('activity-date').value;
+
+    // Se è selezionato "Altro", prendi il valore personalizzato
+    if (activity === 'altro') {
+        const customActivity = document.getElementById('custom-activity').value.trim();
+        if (!customActivity) {
+            alert('Inserisci un tipo di manutenzione personalizzato');
+            return;
+        }
+        activity = customActivity;
+    }
 
     if (!activity || !kilometers || !date) {
         alert('Compila tutti i campi');
@@ -396,7 +463,6 @@ async function updateActivity() {
         alert('Errore durante l\'aggiornamento dell\'attività');
     }
 }
-
 
 async function regenerateQR(vehicleId) {
     try {
@@ -431,7 +497,3 @@ async function regenerateQR(vehicleId) {
         alert('Errore nella generazione del QR code');
     }
 }
-
-
-// Carica la lista dei veicoli all'avvio
-document.addEventListener('DOMContentLoaded', loadVehicles);
