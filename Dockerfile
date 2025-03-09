@@ -1,3 +1,4 @@
+# Description: Dockerfile for deploying FastAPI app to Azure App Service
 FROM python:3.11-slim
 
 # Install nginx
@@ -21,19 +22,10 @@ RUN pip install --no-cache-dir -r requirements.txt
 RUN mkdir -p static/css static/js && \
     mkdir -p /home/data
 
-# Copy static files
-COPY static/css/style.css static/css/
-COPY static/js/admin.js static/js/
-COPY static/js/maintenance.js static/js/
-COPY static/js/script.js static/js/
-COPY static/js/vehicle.js static/js/
-COPY static/*.html static/
+# Copy all files
+COPY . .
 
-# Copy Python files
-COPY main.py .
-COPY database.py .
-
-# Configure nginx
+# Configure nginx - Update to listen on port 8080 for Azure
 RUN echo ' \
     server { \
     listen 443; \
@@ -54,10 +46,15 @@ RUN echo '#!/bin/bash\n\
     uvicorn main:app --host 127.0.0.1 --port 8000\n\
     ' > /start.sh && chmod +x /start.sh
 
-# Set environment variable for database path
+# Set environment variables
 ENV DB_PATH=/home/data/service_records.db
+ENV SECRET_KEY=change-this-secret-key-in-production
+ENV ADMIN_USERNAME=admin
+ENV ADMIN_PASSWORD=password123
+# Update host URL to use your Azure App Service URL
+ENV HOST_URL=https://meccanico-aregf0d6g6ahf5gn.italynorth-01.azurewebsites.net/
 
-# Expose port
+# Expose port 8080 for Azure
 EXPOSE 443
 
 # Command to run both nginx and uvicorn

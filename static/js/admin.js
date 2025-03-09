@@ -1,3 +1,55 @@
+// Check authentication on page load
+document.addEventListener('DOMContentLoaded', function () {
+    checkAuth();
+
+    // Setup logout button
+    document.getElementById('logout-btn').addEventListener('click', logout);
+});
+
+// Auth check function
+function checkAuth() {
+    // We're using cookies now, so just check if we can access protected content
+    fetch('/api/user', {
+        credentials: 'include'
+    })
+        .then(response => {
+            if (!response.ok) {
+                window.location.href = '/login';
+            }
+        })
+        .catch(() => {
+            window.location.href = '/login';
+        });
+}
+
+// Logout function
+function logout() {
+    // Send request to remove the cookie
+    fetch('/logout', {
+        method: 'POST',
+        credentials: 'include'
+    }).then(() => {
+        window.location.href = '/login';
+    });
+}
+
+// Add credentials to fetch requests
+const originalFetch = window.fetch;
+window.fetch = function (url, options = {}) {
+    // Always include credentials for cookies
+    options.credentials = 'include';
+
+    return originalFetch(url, options)
+        .then(response => {
+            // Redirect to login if unauthorized
+            if (response.status === 401) {
+                window.location.href = '/login';
+            }
+            return response;
+        });
+};
+
+
 async function addVehicle() {
     const licensePlate = document.getElementById('license-plate').value;
     if (!licensePlate) {

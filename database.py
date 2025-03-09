@@ -1,7 +1,7 @@
 # database.py
 import os
-from typing import List
-from sqlalchemy import String, create_engine, ForeignKey
+from typing import List, Optional
+from sqlalchemy import String, create_engine, ForeignKey, Boolean
 from sqlalchemy.orm import (
     DeclarativeBase,
     Mapped,
@@ -25,17 +25,22 @@ engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={
                        "check_same_thread": False})
 
 # Create base class for SQLAlchemy models
-
-
 class Base(DeclarativeBase):
     pass
-
 
 # Create SessionLocal class
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 # Database Models
-
+class User(Base):
+    __tablename__ = "users"
+    
+    id: Mapped[int] = mapped_column(primary_key=True)
+    username: Mapped[str] = mapped_column(String, unique=True, index=True)
+    password_hash: Mapped[str] = mapped_column(String)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    created_at: Mapped[datetime] = mapped_column(default=datetime.now)
+    last_login: Mapped[Optional[datetime]] = mapped_column(default=None)
 
 class Vehicle(Base):
     __tablename__ = "vehicles"
@@ -49,7 +54,6 @@ class Vehicle(Base):
         cascade="all, delete-orphan"
     )
 
-
 class Activity(Base):
     __tablename__ = "activities"
 
@@ -61,7 +65,6 @@ class Activity(Base):
 
     vehicle: Mapped["Vehicle"] = relationship(back_populates="activities")
 
-
 class MaintenanceType(Base):
     __tablename__ = "maintenance_types"
 
@@ -69,14 +72,10 @@ class MaintenanceType(Base):
     name: Mapped[str] = mapped_column(String, unique=True, index=True)
 
 # Create database tables
-
-
 def init_db():
     Base.metadata.create_all(bind=engine)
 
 # Dependency to get database session
-
-
 def get_db():
     db = SessionLocal()
     try:
