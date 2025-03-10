@@ -1,12 +1,6 @@
 .vscode/
 venv/
-__pycache__/
 vscode/
-__pycache__/database.cpython-310.pyc
-__pycache__/main.cpython-310.pyc
-__pycache__/main.cpython-310.pyc
-service_records.db
-__pycache__/main.cpython-310.pyc
-.github/workflows/main_meccanico.yml
-service_records_backup_20250310_010707.db
+*.pyc
+*.db
 service_records.db
