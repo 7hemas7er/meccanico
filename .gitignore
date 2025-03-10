@@ -3,4 +3,3 @@ venv/
 vscode/
 *.pyc
 *.db
-service_records.db
