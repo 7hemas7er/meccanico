@@ -1,5 +1,5 @@
 # main.py
-from fastapi import FastAPI, HTTPException, Depends, Request, Body, status,  Security, Response
+from fastapi import FastAPI, HTTPException, Depends, Request, Body, status,  Security, Response,File, UploadFile, BackgroundTasks
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.responses import FileResponse, RedirectResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 from datetime import datetime, timedelta
 import os
+from backup import DatabaseBackup
 import uuid
 import qrcode
 from io import BytesIO
@@ -450,6 +451,138 @@ async def logout():
     response = JSONResponse({"status": "success"})
     response.delete_cookie(key="access_token")
     return response
+
+
+@app.get("/api/database/export")
+async def export_database(
+    background_tasks: BackgroundTasks,
+    current_user: User = Depends(get_current_active_user)
+):
+    """Export database as a downloadable file"""
+    try:
+        # Create an instance of DatabaseBackup
+        db_backup = DatabaseBackup(
+            os.getenv('DB_PATH', '/home/data/service_records.db'))
+
+        # Export the database
+        export_path = await db_backup.export_database()
+
+        # Schedule file cleanup after download
+        def cleanup(path: str):
+            try:
+                if os.path.exists(path):
+                    os.unlink(path)
+                if os.path.exists(os.path.dirname(path)) and not os.listdir(os.path.dirname(path)):
+                    os.rmdir(os.path.dirname(path))
+            except Exception as e:
+                print(f"Error cleaning up: {e}")
+
+        background_tasks.add_task(cleanup, export_path)
+
+        # Return the file for download
+        return FileResponse(
+            path=export_path,
+            filename=os.path.basename(export_path),
+            media_type="application/octet-stream"
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Database export failed: {str(e)}"
+        )
+
+
+@app.get("/api/database/export-json")
+async def export_database_json(
+    background_tasks: BackgroundTasks,
+    current_user: User = Depends(get_current_active_user)
+):
+    """Export database as JSON file"""
+    try:
+        # Create an instance of DatabaseBackup
+        db_backup = DatabaseBackup(
+            os.getenv('DB_PATH', '/home/data/service_records.db'))
+
+        # Export the database as JSON
+        export_path = await db_backup.export_as_json()
+
+        # Schedule file cleanup after download
+        def cleanup(path: str):
+            try:
+                if os.path.exists(path):
+                    os.unlink(path)
+                if os.path.exists(os.path.dirname(path)) and not os.listdir(os.path.dirname(path)):
+                    os.rmdir(os.path.dirname(path))
+            except Exception as e:
+                print(f"Error cleaning up: {e}")
+
+        background_tasks.add_task(cleanup, export_path)
+
+        # Return the file for download
+        return FileResponse(
+            path=export_path,
+            filename=os.path.basename(export_path),
+            media_type="application/json"
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"JSON export failed: {str(e)}"
+        )
+
+
+@app.post("/api/database/import")
+async def import_database(
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_active_user)
+):
+    """Import database from a file"""
+    try:
+        # Create an instance of DatabaseBackup
+        db_backup = DatabaseBackup(
+            os.getenv('DB_PATH', '/home/data/service_records.db'))
+
+        # Check file extension
+        if file.filename.endswith('.json'):
+            # Import as JSON
+            result = await db_backup.import_json(file)
+        elif file.filename.endswith('.db') or file.filename.endswith('.sqlite'):
+            # Import as SQLite database
+            result = await db_backup.import_database(file)
+        else:
+            raise HTTPException(
+                status_code=400,
+                detail="Unsupported file format. Please upload a .db, .sqlite, or .json file."
+            )
+
+        if result:
+            return {"message": "Database successfully imported"}
+        else:
+            raise HTTPException(
+                status_code=500,
+                detail="Database import failed"
+            )
+    except ValueError as e:
+        raise HTTPException(
+            status_code=400,
+            detail=str(e)
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Database import failed: {str(e)}"
+        )
+
+# Add this route to serve the backup.html page
+
+
+@app.get("/backup")
+async def backup_page(current_user: User = Depends(get_current_active_user)):
+    """Serve the backup management page"""
+    backup_path = os.path.join(STATIC_DIR, "backup.html")
+    if not os.path.exists(backup_path):
+        raise HTTPException(status_code=404, detail="backup.html not found")
+    return FileResponse(backup_path)
 
 
 if __name__ == "__main__":
