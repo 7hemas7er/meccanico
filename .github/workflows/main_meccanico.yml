@@ -23,14 +23,14 @@ jobs:
       uses: docker/login-action@v2
       with:
         registry: https://ghcr.io/
-        username: ${{ secrets.AzureAppService_ContainerUsername_76ec6176e5a945e5b73d5d2ff144b366 }}
-        password: ${{ secrets.AzureAppService_ContainerPassword_ae1ecd4cb2ca40ee8852961926e10caf }}
+        username: ${{ secrets.AzureAppService_ContainerUsername_c84cc9650427445fb3798ed8096da0a9 }}
+        password: ${{ secrets.AzureAppService_ContainerPassword_cb8aa4e1434943babf38ceafe423e085 }}
 
     - name: Build and push container image to registry
       uses: docker/build-push-action@v3
       with:
         push: true
-        tags: ghcr.io/${{ secrets.AzureAppService_ContainerUsername_76ec6176e5a945e5b73d5d2ff144b366 }}/7hemas7er/7hemas7er/meccanico:${{ github.sha }}
+        tags: ghcr.io/${{ secrets.AzureAppService_ContainerUsername_c84cc9650427445fb3798ed8096da0a9 }}/7hemas7er/meccanico:${{ github.sha }}
         file: ./Dockerfile
 
   deploy:
@@ -47,5 +47,5 @@ jobs:
       with:
         app-name: 'meccanico'
         slot-name: 'production'
-        publish-profile: ${{ secrets.AzureAppService_PublishProfile_6c50d258559840abbd593ff5d6dbc818 }}
-        images: 'ghcr.io/${{ secrets.AzureAppService_ContainerUsername_76ec6176e5a945e5b73d5d2ff144b366 }}/7hemas7er/7hemas7er/meccanico:${{ github.sha }}'
+        publish-profile: ${{ secrets.AzureAppService_PublishProfile_e7433b7ccec54466aa617347c5cb5ba9 }}
+        images: 'ghcr.io/${{ secrets.AzureAppService_ContainerUsername_c84cc9650427445fb3798ed8096da0a9 }}/7hemas7er/meccanico:${{ github.sha }}'
