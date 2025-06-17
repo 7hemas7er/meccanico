@@ -45,6 +45,37 @@
         </div>
 
         <div class="max-w-md mx-auto bg-white shadow-md rounded px-8 pt-6 pb-8 mb-8">
+            <h2 class="text-xl font-bold mb-4">Configurazione QR Code</h2>
+            
+            <div id="qr-success-message"
+                class="hidden bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
+                <span>URL QR Code aggiornato con successo!</span>
+            </div>
+
+            <div id="qr-error-message" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+                <span id="qr-error-text">Errore</span>
+            </div>
+
+            <form id="qr-form" class="space-y-4">
+                <div>
+                    <label for="host-url" class="block text-gray-700 text-sm font-bold mb-2">URL Base per QR Code</label>
+                    <input id="host-url" type="url"
+                        placeholder="http://localhost:8000"
+                        class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                        required>
+                    <p class="text-gray-600 text-xs mt-1">L'URL dove i QR code dei veicoli punteranno</p>
+                </div>
+
+                <div>
+                    <button type="submit"
+                        class="w-full bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                        Aggiorna URL QR Code
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <div class="max-w-md mx-auto bg-white shadow-md rounded px-8 pt-6 pb-8 mb-8">
             <h2 class="text-xl font-bold mb-4">Cambio Password</h2>
 
             <div id="success-message"
@@ -99,6 +130,9 @@
             // Load user data
             loadUserData();
 
+            // Load QR settings
+            loadQRSettings();
+
             // Setup logout button
             document.getElementById('logout-btn').addEventListener('click', logout);
 
@@ -121,6 +155,15 @@
 
                 // Update password
                 changePassword(oldPassword, newPassword);
+            });
+
+            // QR form handling
+            const qrForm = document.getElementById('qr-form');
+            qrForm.addEventListener('submit', function (e) {
+                e.preventDefault();
+
+                const hostUrl = document.getElementById('host-url').value;
+                updateQRSettings(hostUrl);
             });
         });
 
@@ -205,6 +248,59 @@
                 document.getElementById('error-text').textContent = error.message;
                 document.getElementById('error-message').classList.remove('hidden');
                 document.getElementById('success-message').classList.add('hidden');
+            }
+        }
+
+        // Load QR settings
+        async function loadQRSettings() {
+            try {
+                const response = await fetch('/api/qr-settings', {
+                    credentials: 'include'
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById('host-url').value = data.host_url || '';
+                }
+            } catch (error) {
+                console.error('Errore nel caricamento impostazioni QR:', error);
+            }
+        }
+
+        // Update QR settings
+        async function updateQRSettings(hostUrl) {
+            try {
+                const response = await fetch('/api/qr-settings', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        host_url: hostUrl
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    document.getElementById('qr-success-message').classList.remove('hidden');
+                    document.getElementById('qr-error-message').classList.add('hidden');
+
+                    // Hide success message after 3 seconds
+                    setTimeout(() => {
+                        document.getElementById('qr-success-message').classList.add('hidden');
+                    }, 3000);
+
+                } else {
+                    throw new Error(data.detail || 'Errore durante l\'aggiornamento URL QR Code');
+                }
+
+            } catch (error) {
+                console.error('Errore:', error);
+                document.getElementById('qr-error-text').textContent = error.message;
+                document.getElementById('qr-error-message').classList.remove('hidden');
+                document.getElementById('qr-success-message').classList.add('hidden');
             }
         }
 

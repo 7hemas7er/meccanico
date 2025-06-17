@@ -71,6 +71,14 @@ class MaintenanceType(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String, unique=True, index=True)
 
+class QRSettings(Base):
+    __tablename__ = "qr_settings"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    host_url: Mapped[str] = mapped_column(String, default="http://localhost:8000")
+    updated_at: Mapped[datetime] = mapped_column(
+        default=datetime.now, onupdate=datetime.now)
+
 # Create database tables
 def init_db():
     Base.metadata.create_all(bind=engine)

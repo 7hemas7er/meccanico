@@ -15,7 +15,7 @@ import qrcode
 from io import BytesIO
 import base64
 from datetime import datetime
-from database import get_db, Vehicle, Activity, MaintenanceType, User, init_db
+from database import get_db, Vehicle, Activity, MaintenanceType, User, QRSettings, init_db
 from pydantic import BaseModel, ConfigDict
 from auth import update_user_password
 
@@ -46,6 +46,12 @@ class PasswordChange(BaseModel):
     
 class MaintenanceTypeCreate(BaseModel):
     type_name: str
+
+class QRSettingsUpdate(BaseModel):
+    host_url: str
+
+class QRSettingsResponse(BaseModel):
+    host_url: str
 
 
 class ServiceActivity(BaseModel):
@@ -94,9 +100,16 @@ app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 # QR code generation function
 
 
-def generate_qr_code(vehicle_id: str) -> str:
+def generate_qr_code(vehicle_id: str, db: Session = None) -> str:
+    # Get host URL from database settings or fallback to environment/default
+    host_url = HOST_URL
+    if db:
+        qr_settings = db.query(QRSettings).first()
+        if qr_settings:
+            host_url = qr_settings.host_url
+    
     qr = qrcode.QRCode(version=1, box_size=10, border=5)
-    qr.add_data(f"{HOST_URL}/vehicle/{vehicle_id}")
+    qr.add_data(f"{host_url}/vehicle/{vehicle_id}")
     qr.make(fit=True)
 
     img_buffer = BytesIO()
@@ -314,7 +327,7 @@ async def create_vehicle(
     db: Session = Depends(get_db)
 ):
     vehicle_id = str(uuid.uuid4())
-    qr_code = generate_qr_code(vehicle_id)
+    qr_code = generate_qr_code(vehicle_id, db)
 
     new_vehicle = Vehicle(
         id=vehicle_id,
@@ -425,7 +438,7 @@ async def regenerate_qr(
     if not vehicle:
         raise HTTPException(status_code=404, detail="Veicolo non trovato")
 
-    qr_code = generate_qr_code(vehicle_id)
+    qr_code = generate_qr_code(vehicle_id, db)
     return {"qr_code": qr_code}
 
 # Get current user info endpoint
@@ -451,6 +464,42 @@ async def logout():
     response = JSONResponse({"status": "success"})
     response.delete_cookie(key="access_token")
     return response
+
+# QR Settings endpoints
+@app.get("/api/qr-settings", response_model=QRSettingsResponse)
+async def get_qr_settings(
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """Get current QR code settings"""
+    qr_settings = db.query(QRSettings).first()
+    if not qr_settings:
+        # Create default settings if none exist
+        qr_settings = QRSettings(host_url=HOST_URL)
+        db.add(qr_settings)
+        db.commit()
+        db.refresh(qr_settings)
+    
+    return QRSettingsResponse(host_url=qr_settings.host_url)
+
+@app.put("/api/qr-settings")
+async def update_qr_settings(
+    settings: QRSettingsUpdate,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """Update QR code settings"""
+    qr_settings = db.query(QRSettings).first()
+    if not qr_settings:
+        # Create new settings if none exist
+        qr_settings = QRSettings(host_url=settings.host_url)
+        db.add(qr_settings)
+    else:
+        # Update existing settings
+        qr_settings.host_url = settings.host_url
+    
+    db.commit()
+    return {"message": "QR settings updated successfully"}
 
 
 @app.get("/api/database/export")
