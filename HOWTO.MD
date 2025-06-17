@@ -117,3 +117,4 @@ docker push YourRegistryName.azurecr.io/vehicle-maintenance-app:latest
 # Deploy to Azure App Service
 az webapp config container set --name YourAppServiceName --resource-group YourResourceGroup --docker-custom-image-name YourRegistryName.azurecr.io/vehicle-maintenance-app:latest
 ```
+
