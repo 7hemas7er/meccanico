@@ -16,7 +16,7 @@ pillow==11.0.0
 pyasn1==0.5.1
 pydantic==2.10.3
 pydantic_core==2.27.1
-python-jose==3.3.0
+python-jose==3.5.0
 python-multipart==0.0.19
 qrcode==8.0
 rsa==4.9
