@@ -80,8 +80,8 @@ async function addVehicle() {
 
         const data = await response.json();
 
-        document.getElementById('qr-code-display').classList.remove('hidden');
-        document.getElementById('qr-code').src = data.qr_code;
+        // Stampa direttamente il QR code senza mostrarlo
+        printQRDirectly(data.qr_code);
 
         document.getElementById('license-plate').value = '';
         loadVehicles();
@@ -464,6 +464,22 @@ async function updateActivity() {
     }
 }
 
+function printQRDirectly(qrCodeData) {
+    // Crea un div temporaneo per la stampa
+    const qrDisplay = document.createElement('div');
+    qrDisplay.className = 'qr-code-container printing';
+    qrDisplay.innerHTML = `<img src="${qrCodeData}" alt="QR Code">`;
+    document.body.appendChild(qrDisplay);
+    
+    // Stampa
+    window.print();
+    
+    // Rimuovi il div dopo la stampa
+    setTimeout(() => {
+        qrDisplay.remove();
+    }, 100);
+}
+
 async function regenerateQR(vehicleId) {
     try {
         const response = await fetch(`/api/vehicle/${vehicleId}/qr`);
@@ -489,11 +505,42 @@ async function regenerateQR(vehicleId) {
         // Stampa
         window.print();
 
-        // Rimuovi la classe dopo la stampa
-        qrDisplay.classList.remove('printing');
+        // Rimuovi la classe dopo la stampa e rimuovi il div temporaneo
+        setTimeout(() => {
+            qrDisplay.classList.remove('printing');
+            qrDisplay.remove();
+        }, 100);
 
     } catch (error) {
         console.error('Errore:', error);
         alert('Errore nella generazione del QR code');
     }
 }
+
+// Admin permission check
+async function checkAdminPermissions() {
+    try {
+        const response = await fetch('/api/user/role');
+        const data = await response.json();
+        const isAdmin = data.is_admin;
+        
+        // Mostra/nascondi elementi admin
+        if (isAdmin) {
+            document.getElementById('users-link').classList.remove('hidden');
+        } else {
+            // Nascondi link per non admin
+            document.getElementById('settings-link').classList.add('hidden');
+            document.getElementById('backup-link').classList.add('hidden');
+        }
+        
+        return isAdmin;
+    } catch (error) {
+        console.error('Errore nel controllo permessi:', error);
+        return false;
+    }
+}
+
+// Controlla permessi admin al caricamento
+document.addEventListener('DOMContentLoaded', function() {
+    checkAdminPermissions();
+});

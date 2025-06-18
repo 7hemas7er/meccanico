@@ -139,5 +139,31 @@ async function saveMaintenanceType() {
     }
 }
 
+// Admin permission check
+async function checkAdminPermissions() {
+    try {
+        const response = await fetch('/api/user/role');
+        const data = await response.json();
+        const isAdmin = data.is_admin;
+        
+        // Mostra/nascondi elementi admin
+        if (isAdmin) {
+            document.getElementById('users-link').classList.remove('hidden');
+        } else {
+            // Nascondi link per non admin
+            document.getElementById('settings-link').classList.add('hidden');
+            document.getElementById('backup-link').classList.add('hidden');
+        }
+        
+        return isAdmin;
+    } catch (error) {
+        console.error('Errore nel controllo permessi:', error);
+        return false;
+    }
+}
+
 // Carica i tipi all'avvio
-document.addEventListener('DOMContentLoaded', loadMaintenanceTypes);
+document.addEventListener('DOMContentLoaded', function() {
+    loadMaintenanceTypes();
+    checkAdminPermissions();
+});

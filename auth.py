@@ -146,6 +146,11 @@ async def get_current_active_user(current_user: User = Depends(get_current_user)
         raise HTTPException(status_code=400, detail="Inactive user")
     return current_user
 
+async def get_current_admin_user(current_user: User = Depends(get_current_active_user)):
+    if current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    return current_user
+
 # Initialize database with default admin user if not exists
 def init_admin_user(db: Session):
     admin_username = os.getenv("ADMIN_USERNAME", "admin")
@@ -154,5 +159,8 @@ def init_admin_user(db: Session):
     # Check if admin exists
     admin = get_user(db, admin_username)
     if not admin:
-        create_user(db, UserCreate(
+        admin_user = create_user(db, UserCreate(
             username=admin_username, password=admin_password))
+        # Set admin role
+        admin_user.role = "admin"
+        db.commit()

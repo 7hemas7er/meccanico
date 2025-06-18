@@ -1,5 +1,92 @@
+:root {
+    --bg-primary: #f7fafc;
+    --bg-secondary: #ffffff;
+    --text-primary: #1a202c;
+    --text-secondary: #4a5568;
+    --border-color: #e2e8f0;
+    --shadow-light: rgba(0, 0, 0, 0.1);
+}
+
+:root.dark {
+    --bg-primary: #1a202c;
+    --bg-secondary: #2d3748;
+    --text-primary: #f7fafc;
+    --text-secondary: #cbd5e0;
+    --border-color: #4a5568;
+    --shadow-light: rgba(0, 0, 0, 0.3);
+}
+
 .hidden {
     display: none;
+}
+
+/* Theme toggle button */
+.theme-toggle {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    box-shadow: 0 2px 4px var(--shadow-light);
+    z-index: 1000;
+    transition: all 0.2s ease;
+}
+
+.theme-toggle:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px var(--shadow-light);
+}
+
+/* Dark theme overrides for Tailwind classes */
+html.dark body {
+    background-color: var(--bg-primary) !important;
+    color: var(--text-primary) !important;
+}
+
+html.dark .bg-gray-100 {
+    background-color: var(--bg-primary) !important;
+}
+
+html.dark .bg-white {
+    background-color: var(--bg-secondary) !important;
+    color: var(--text-primary) !important;
+}
+
+html.dark .text-gray-700 {
+    color: var(--text-secondary) !important;
+}
+
+html.dark .text-gray-500 {
+    color: var(--text-secondary) !important;
+}
+
+html.dark .border {
+    border-color: var(--border-color) !important;
+}
+
+html.dark .shadow-md,
+html.dark .shadow-lg {
+    box-shadow: 0 4px 6px var(--shadow-light) !important;
+}
+
+html.dark input,
+html.dark select,
+html.dark textarea {
+    background-color: var(--bg-primary) !important;
+    color: var(--text-primary) !important;
+    border-color: var(--border-color) !important;
+}
+
+html.dark input::placeholder {
+    color: var(--text-secondary) !important;
+}
+
+html.dark .bg-gray-600 {
+    background-color: rgba(26, 32, 44, 0.9) !important;
 }
 
 .qr-code-container {
@@ -13,28 +100,43 @@
 }
 
 @media print {
-
-    /* Nascondi tutti gli elementi */
-    body * {
-        visibility: hidden !important;
+    @page {
+        margin: 0;
+        size: A4;
     }
 
-    /* Mostra solo il QR code */
+    body {
+        margin: 0;
+        padding: 0;
+        background: white;
+    }
+
+    body > * {
+        display: none !important;
+    }
+
     .qr-code-container.printing {
-        visibility: visible !important;
-        position: fixed !important;
+        display: block !important;
+        position: absolute !important;
         top: 50% !important;
         left: 50% !important;
         transform: translate(-50%, -50%) !important;
+        background: none !important;
+        border: none !important;
+        box-shadow: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
     }
 
-    .qr-code-container.printing * {
-        visibility: visible !important;
-    }
-
-    /* Nascondi i pulsanti durante la stampa */
-    .qr-code-container.printing button {
-        display: none !important;
+    .qr-code-container.printing img {
+        display: block !important;
+        width: 200px !important;
+        height: 200px !important;
+        background: none !important;
+        border: none !important;
+        box-shadow: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
     }
 }
 
