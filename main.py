@@ -30,7 +30,7 @@ from security import (
 # Import auth module
 from auth import (
     Token, UserCreate, UserResponse, UserUpdate,
-    get_current_active_user, create_access_token,
+    get_current_active_user, get_current_admin_user, create_access_token,
     get_user, create_user, update_user_password,
     update_login_timestamp, verify_password, init_admin_user,
     ACCESS_TOKEN_EXPIRE_MINUTES  # Add this import
@@ -216,7 +216,7 @@ async def login_page():
 
 
 @app.get("/settings")
-async def settings_page(current_user: User = Depends(get_current_active_user)):
+async def settings_page(current_user: User = Depends(get_current_admin_user)):
     settings_path = os.path.join(STATIC_DIR, "settings.html")
     if not os.path.exists(settings_path):
         raise HTTPException(status_code=404, detail="settings.html not found")
@@ -238,6 +238,13 @@ async def maintenance_page(current_user: User = Depends(get_current_active_user)
         raise HTTPException(
             status_code=404, detail="maintenance.html not found")
     return FileResponse(maintenance_path)
+
+@app.get("/users")
+async def users_page(current_user: User = Depends(get_current_admin_user)):
+    users_path = os.path.join(STATIC_DIR, "users.html")
+    if not os.path.exists(users_path):
+        raise HTTPException(status_code=404, detail="users.html not found")
+    return FileResponse(users_path)
 
 
 @app.get("/vehicle/{vehicle_id}")
@@ -448,6 +455,45 @@ async def regenerate_qr(
 async def read_users_me(current_user: User = Depends(get_current_active_user)):
     return current_user
 
+@app.get("/api/user/role")
+async def get_user_role(current_user: User = Depends(get_current_active_user)):
+    return {"role": current_user.role, "is_admin": current_user.role == "admin"}
+
+# User management endpoints (admin only)
+@app.get("/api/users", response_model=List[UserResponse])
+async def get_all_users(db: Session = Depends(get_db), current_user: User = Depends(get_current_admin_user)):
+    users = db.query(User).all()
+    return users
+
+@app.post("/api/users", response_model=UserResponse)
+async def create_new_user(user: UserCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_admin_user)):
+    db_user = get_user(db, username=user.username)
+    if db_user:
+        raise HTTPException(status_code=400, detail="Username already registered")
+    return create_user(db=db, user=user)
+
+@app.delete("/api/users/{user_id}")
+async def delete_user(user_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_admin_user)):
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    if user.role == "admin":
+        raise HTTPException(status_code=400, detail="Cannot delete admin user")
+    db.delete(user)
+    db.commit()
+    return {"status": "success"}
+
+@app.put("/api/users/{user_id}/toggle-active")
+async def toggle_user_active(user_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_admin_user)):
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    if user.role == "admin":
+        raise HTTPException(status_code=400, detail="Cannot modify admin user")
+    user.is_active = not user.is_active
+    db.commit()
+    return {"status": "success", "is_active": user.is_active}
+
 
 @app.on_event("startup")
 async def startup_event():
@@ -468,7 +514,7 @@ async def logout():
 # QR Settings endpoints
 @app.get("/api/qr-settings", response_model=QRSettingsResponse)
 async def get_qr_settings(
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(get_current_admin_user),
     db: Session = Depends(get_db)
 ):
     """Get current QR code settings"""
@@ -485,7 +531,7 @@ async def get_qr_settings(
 @app.put("/api/qr-settings")
 async def update_qr_settings(
     settings: QRSettingsUpdate,
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(get_current_admin_user),
     db: Session = Depends(get_db)
 ):
     """Update QR code settings"""
@@ -626,7 +672,7 @@ async def import_database(
 
 
 @app.get("/backup")
-async def backup_page(current_user: User = Depends(get_current_active_user)):
+async def backup_page(current_user: User = Depends(get_current_admin_user)):
     """Serve the backup management page"""
     backup_path = os.path.join(STATIC_DIR, "backup.html")
     if not os.path.exists(backup_path):

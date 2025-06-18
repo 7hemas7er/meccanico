@@ -38,6 +38,7 @@ class User(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     username: Mapped[str] = mapped_column(String, unique=True, index=True)
     password_hash: Mapped[str] = mapped_column(String)
+    role: Mapped[str] = mapped_column(String, default="user")  # admin or user
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     created_at: Mapped[datetime] = mapped_column(default=datetime.now)
     last_login: Mapped[Optional[datetime]] = mapped_column(default=None)
