@@ -95,3 +95,6 @@ Key environment variables:
 - Static files mounted at `/static` route
 - HTML pages served via FileResponse with authentication checks
 - JavaScript modules handle frontend interactivity and API calls
+
+## Running progect
+- DB_PATH="./service_records.db" python main.py 
