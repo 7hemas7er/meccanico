@@ -96,5 +96,5 @@ Key environment variables:
 - HTML pages served via FileResponse with authentication checks
 - JavaScript modules handle frontend interactivity and API calls
 
-## Running progect
+## Running project
 - DB_PATH="./service_records.db" python main.py 
