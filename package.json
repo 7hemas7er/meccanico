@@ -11,7 +11,7 @@
     "build": "echo 'No build step required for static site'"
   },
   "devDependencies": {
-    "wrangler": "^4.0.0"
+    "wrangler": "^3.86.1"
   },
   "keywords": [
     "cloudflare",

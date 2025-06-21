@@ -283,6 +283,20 @@ const routes = {
 export async function onRequest(context) {
     const { request, env } = context;
     
+    // Initialize database on first request if needed
+    try {
+        const { results } = await env.DB.prepare('SELECT COUNT(*) as count FROM users').all();
+        if (results[0].count === 0) {
+            // Create default admin user
+            const adminPassword = await hashPassword(env.ADMIN_PASSWORD || 'password123');
+            await env.DB.prepare(
+                'INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?)'
+            ).bind(env.ADMIN_USERNAME || 'admin', adminPassword, 'admin').run();
+        }
+    } catch (error) {
+        console.log('Database initialization may be needed:', error.message);
+    }
+    
     // Handle CORS
     if (request.method === 'OPTIONS') {
         return new Response(null, {
@@ -343,25 +357,4 @@ export async function onRequest(context) {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         });
     }
-}
-
-// Initialize database on first deployment
-export async function onRequestGet(context) {
-    const { env } = context;
-    
-    // Check if database is initialized
-    try {
-        const { results } = await env.DB.prepare('SELECT COUNT(*) as count FROM users').all();
-        if (results[0].count === 0) {
-            // Create default admin user
-            const adminPassword = await hashPassword(env.ADMIN_PASSWORD || 'password123');
-            await env.DB.prepare(
-                'INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?)'
-            ).bind(env.ADMIN_USERNAME || 'admin', adminPassword, 'admin').run();
-        }
-    } catch (error) {
-        console.log('Database initialization may be needed');
-    }
-    
-    return onRequest(context);
 }
