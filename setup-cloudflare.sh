@@ -47,23 +47,20 @@ check_requirements() {
 install_wrangler() {
     print_status "Installing Wrangler CLI..."
     
-    if command -v wrangler &> /dev/null; then
-        print_status "Wrangler already installed: $(wrangler --version)"
-    else
-        npm install -g wrangler
-        print_success "Wrangler CLI installed"
-    fi
+    # Install as project dependency
+    npm install
+    print_success "Wrangler CLI installed"
 }
 
 # Login to Cloudflare
 login_cloudflare() {
     print_status "Checking Cloudflare authentication..."
     
-    if wrangler whoami &> /dev/null; then
+    if npx wrangler whoami &> /dev/null; then
         print_success "Already logged in to Cloudflare"
     else
         print_warning "Please log in to Cloudflare..."
-        wrangler login
+        npx wrangler login
     fi
 }
 
@@ -80,7 +77,7 @@ init_database() {
     
     # Apply schema to database
     print_status "Applying database schema..."
-    wrangler d1 execute vehicle-maintenance-db --file=schema.sql
+    npx wrangler d1 execute vehicle-maintenance-db --file=schema.sql
     
     print_success "Database initialized with schema"
 }
@@ -128,7 +125,7 @@ test_local() {
     print_warning "Open http://localhost:8788 in your browser to test"
     print_warning "Press Ctrl+C to stop the development server"
     
-    wrangler pages dev public --d1=DB
+    npx wrangler pages dev public --d1=DB
 }
 
 # Deploy to Cloudflare Pages
@@ -137,11 +134,11 @@ deploy_production() {
     
     # Apply schema to production database
     print_status "Applying schema to production database..."
-    wrangler d1 execute vehicle-maintenance-db --env=production --file=schema.sql
+    npx wrangler d1 execute vehicle-maintenance-db --env=production --file=schema.sql
     
     # Deploy to Pages
     print_status "Deploying to Cloudflare Pages..."
-    wrangler pages deploy public --project-name=vehicle-maintenance-app
+    npx wrangler pages deploy public --project-name=vehicle-maintenance-app
     
     print_success "Deployment completed!"
 }
@@ -181,9 +178,9 @@ show_deployment_info() {
     echo "   • Password: password123"
     echo ""
     echo "🔧 Management Commands:"
-    echo "   • wrangler pages dev public --d1=DB (local development)"
-    echo "   • wrangler pages deploy public (deploy)"
-    echo "   • wrangler d1 execute vehicle-maintenance-db --command=\"SELECT * FROM users\" (query database)"
+    echo "   • npx wrangler pages dev public --d1=DB (local development)"
+    echo "   • npx wrangler pages deploy public (deploy)"
+    echo "   • npx wrangler d1 execute vehicle-maintenance-db --command=\"SELECT * FROM users\" (query database)"
     echo ""
 }
 

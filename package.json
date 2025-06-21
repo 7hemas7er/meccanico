@@ -3,15 +3,15 @@
   "version": "1.0.0",
   "description": "Vehicle Maintenance Application for Cloudflare Pages",
   "scripts": {
-    "dev": "wrangler pages dev public --d1=DB",
-    "deploy": "wrangler pages deploy public",
-    "db:migrate": "wrangler d1 execute vehicle-maintenance-db --file=schema.sql",
-    "db:migrate:prod": "wrangler d1 execute vehicle-maintenance-db --env=production --file=schema.sql",
-    "db:shell": "wrangler d1 execute vehicle-maintenance-db --command=\".schema\"",
+    "dev": "npx wrangler pages dev public --d1=DB",
+    "deploy": "npx wrangler pages deploy public",
+    "db:migrate": "npx wrangler d1 execute vehicle-maintenance-db --file=schema.sql",
+    "db:migrate:prod": "npx wrangler d1 execute vehicle-maintenance-db --env=production --file=schema.sql",
+    "db:shell": "npx wrangler d1 execute vehicle-maintenance-db --command=\".schema\"",
     "build": "echo 'No build step required for static site'"
   },
   "devDependencies": {
-    "wrangler": "^3.0.0"
+    "wrangler": "^4.0.0"
   },
   "keywords": [
     "cloudflare",

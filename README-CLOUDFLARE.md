@@ -35,22 +35,19 @@
 #### Installation Steps
 
 ```bash
-# 1. Install Wrangler CLI
-npm install -g wrangler
-
-# 2. Login to Cloudflare
-wrangler login
-
-# 3. Install project dependencies
+# 1. Install project dependencies (includes Wrangler)
 npm install
 
-# 4. Initialize D1 database
-wrangler d1 execute vehicle-maintenance-db --file=schema.sql
+# 2. Login to Cloudflare
+npx wrangler login
 
-# 5. Start local development
+# 3. Initialize D1 database
+npx wrangler d1 execute vehicle-maintenance-db --file=schema.sql
+
+# 4. Start local development
 npm run dev
 
-# 6. Deploy to production
+# 5. Deploy to production
 npm run deploy
 ```
 
@@ -107,7 +104,7 @@ project/
 # Start local development server
 npm run dev
 # or
-wrangler pages dev public --d1=DB
+npx wrangler pages dev public --d1=DB
 
 # Access at: http://localhost:8788
 ```
@@ -118,7 +115,7 @@ wrangler pages dev public --d1=DB
 npm run db:shell
 
 # Execute SQL queries
-wrangler d1 execute vehicle-maintenance-db --command="SELECT * FROM users"
+npx wrangler d1 execute vehicle-maintenance-db --command="SELECT * FROM users"
 
 # Apply schema changes
 npm run db:migrate
@@ -157,7 +154,7 @@ All API endpoints are available at `/api/`:
 # Deploy to Cloudflare Pages
 npm run deploy
 # or
-wrangler pages deploy public --project-name=vehicle-maintenance-app
+npx wrangler pages deploy public --project-name=vehicle-maintenance-app
 ```
 
 ### Custom Domain Setup
@@ -210,10 +207,10 @@ Some endpoints from the original FastAPI app are not yet implemented in the Clou
 #### 1. Database Not Accessible
 ```bash
 # Check database binding
-wrangler d1 list
+npx wrangler d1 list
 
 # Test database connection
-wrangler d1 execute vehicle-maintenance-db --command="SELECT COUNT(*) FROM users"
+npx wrangler d1 execute vehicle-maintenance-db --command="SELECT COUNT(*) FROM users"
 ```
 
 #### 2. Authentication Not Working
@@ -232,7 +229,7 @@ wrangler d1 execute vehicle-maintenance-db --command="SELECT COUNT(*) FROM users
 rm -rf ~/.wrangler
 
 # Restart development server
-wrangler pages dev public --d1=DB --port 8788
+npx wrangler pages dev public --d1=DB --port 8788
 ```
 
 ### Performance Tips
@@ -269,7 +266,7 @@ wrangler pages dev public --d1=DB --port 8788
 
 ### Getting Help
 1. Check Cloudflare Dashboard logs
-2. Use `wrangler tail` for real-time logs
+2. Use `npx wrangler tail` for real-time logs
 3. Check browser console for frontend errors
 4. Verify network requests in browser dev tools
 
