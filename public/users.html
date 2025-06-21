@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="it">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestione Utenti - Sistema di Gestione Veicoli</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="/static/css/style.css" rel="stylesheet">
+    <script src="/static/js/theme.js"></script>
+</head>
+
+<body class="bg-gray-100">
+
+    <!-- Navigation -->
+    <nav class="bg-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex justify-between h-16">
+                <div class="flex space-x-7">
+                    <div class="flex items-center space-x-4">
+                        <a href="/admin" class="text-gray-500 hover:text-gray-700 px-3 py-2 rounded-md">Gestione Veicoli</a>
+                        <a href="/maintenance" class="text-gray-500 hover:text-gray-700 px-3 py-2 rounded-md">Tipi
+                            Manutenzione</a>
+                        <a href="/users" class="bg-blue-500 text-white px-3 py-2 rounded-md">Gestione Utenti</a>
+                        <a href="/settings" class="text-gray-500 hover:text-gray-700 px-3 py-2 rounded-md">Impostazioni</a>
+                        <a href="/backup" class="text-gray-500 hover:text-gray-700 px-3 py-2 rounded-md">Backup</a>
+                    </div>
+                </div>
+                <div class="flex items-center">
+                    <button id="logout-btn" class="text-red-500 hover:text-red-700 px-3 py-2 rounded-md">Logout</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold mb-8 text-center">Gestione Utenti</h1>
+
+        <!-- Form nuovo utente -->
+        <div class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-8">
+            <h2 class="text-xl font-bold mb-4">Aggiungi Nuovo Utente</h2>
+            <div class="flex gap-4">
+                <input type="text" id="new-username" placeholder="Nome utente" 
+                       class="shadow appearance-none border rounded py-2 px-3 text-gray-700 flex-1">
+                <input type="password" id="new-password" placeholder="Password" 
+                       class="shadow appearance-none border rounded py-2 px-3 text-gray-700 flex-1">
+                <button onclick="createUser()" 
+                        class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
+                    Aggiungi
+                </button>
+            </div>
+        </div>
+        
+        <!-- Lista utenti -->
+        <div class="bg-white shadow-md rounded px-8 pt-6 pb-8">
+            <h2 class="text-xl font-bold mb-4">Lista Utenti</h2>
+            <div id="users-list"></div>
+        </div>
+    </div>
+
+    <script src="/static/js/users.js"></script>
+    <script>
+        // Check auth and load page
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAuth();
+            checkAdminPermissions();
+            loadUsers();
+            
+            // Setup logout button
+            document.getElementById('logout-btn').addEventListener('click', logout);
+        });
+
+        // Auth check function
+        function checkAuth() {
+            // In una implementazione reale, verificheresti il token qui
+            return true;
+        }
+
+        // Logout function
+        function logout() {
+            fetch('/logout', {
+                method: 'POST',
+                credentials: 'include'
+            }).then(() => {
+                window.location.href = '/login';
+            });
+        }
+    </script>
+</body>
+
+</html>
