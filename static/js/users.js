@@ -22,10 +22,14 @@ async function checkAdminPermissions() {
 }
 
 async function loadUsers() {
-    if (!isAdmin) return;
-    
     try {
-        const response = await fetch('/api/users');
+        // Cache-busting per evitare problemi di cache del browser
+        const response = await fetch(`/api/users?t=${Date.now()}`);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
         const users = await response.json();
         
         const usersList = document.getElementById('users-list');
@@ -64,7 +68,9 @@ async function loadUsers() {
         });
     } catch (error) {
         console.error('Errore nel caricamento utenti:', error);
-        alert('Errore nel caricamento utenti');
+        const usersList = document.getElementById('users-list');
+        usersList.innerHTML = `<p class="text-red-500">Errore nel caricamento degli utenti: ${error.message}</p>`;
+        alert('Errore nel caricamento degli utenti. Riprova.');
     }
 }
 
@@ -118,19 +124,39 @@ async function deleteUser(userId) {
     if (!confirm('Sei sicuro di voler eliminare questo utente? Questa operazione non può essere annullata.')) return;
     
     try {
+        // Rimuovi immediatamente l'elemento dalla UI
+        const userElements = document.querySelectorAll(`[onclick*="deleteUser(${userId})"]`);
+        const userDiv = userElements[0]?.closest('.border');
+        if (userDiv) {
+            userDiv.style.opacity = '0.5';
+            userDiv.style.pointerEvents = 'none';
+        }
+        
         const response = await fetch(`/api/users/${userId}`, {
             method: 'DELETE'
         });
         
         if (response.ok) {
-            loadUsers();
+            // Rimuovi completamente l'elemento
+            if (userDiv) {
+                userDiv.remove();
+            }
+            // Ricarica la lista come backup per sicurezza
+            setTimeout(() => loadUsers(), 500);
             alert('Utente eliminato con successo');
         } else {
+            // Ripristina l'elemento in caso di errore
+            if (userDiv) {
+                userDiv.style.opacity = '1';
+                userDiv.style.pointerEvents = 'auto';
+            }
             const error = await response.json();
             alert('Errore: ' + error.detail);
         }
     } catch (error) {
         console.error('Errore nell\'eliminazione utente:', error);
+        // Ricarica la lista in caso di errore
+        loadUsers();
         alert('Errore nell\'eliminazione utente');
     }
 }

@@ -61,9 +61,9 @@
     <script src="/static/js/users.js"></script>
     <script>
         // Check auth and load page
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', async function() {
             checkAuth();
-            checkAdminPermissions();
+            await checkAdminPermissions();
             loadUsers();
             
             // Setup logout button
