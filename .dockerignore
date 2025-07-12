@@ -1,0 +1,62 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv
+*.egg-info/
+dist/
+build/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+service_records.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Environment
+.env
+.env.local
+
+# Git
+.git/
+.gitignore
+
+# Documentation
+README*.md
+CLAUDE.md
+LICENSE
+
+# Cloudflare specific files (non necessari per Docker)
+wrangler.toml
+functions/
+package.json
+package-lock.json
+node_modules/
+.node-version
+setup-cloudflare.sh
+
+# Docker files (evita di copiare nel context)
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Backup files
+*.bak
+*.backup

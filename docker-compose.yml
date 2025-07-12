@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  meccanico:
+    build: .
+    container_name: meccanico-app
+    ports:
+      - "8080:80"
+    volumes:
+      - meccanico-data:/home/data
+    environment:
+      - DB_PATH=/home/data/service_records.db
+      - SECRET_KEY=${SECRET_KEY:-your-secret-key-here}
+      - ADMIN_USERNAME=${ADMIN_USERNAME:-admin}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-password123}
+      - HOST_URL=${HOST_URL:-http://localhost:8080}
+    restart: unless-stopped
+
+volumes:
+  meccanico-data:
+    driver: local
