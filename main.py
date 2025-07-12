@@ -53,6 +53,9 @@ class QRSettingsUpdate(BaseModel):
 class QRSettingsResponse(BaseModel):
     host_url: str
 
+class VehicleUpdate(BaseModel):
+    license_plate: str
+
 
 class ServiceActivity(BaseModel):
     activity: str
@@ -72,6 +75,7 @@ class VehicleService(BaseModel):
 class VehicleResponse(BaseModel):
     id: str
     license_plate: str
+    is_active: bool
     activities: List[ServiceActivity]
     last_update: datetime
 
@@ -487,6 +491,73 @@ async def regenerate_qr(
 
     qr_code = generate_qr_code(vehicle_id, db)
     return {"qr_code": qr_code}
+
+# Vehicle management endpoints
+@app.put("/api/vehicle/{vehicle_id}")
+async def update_vehicle(
+    vehicle_id: str,
+    vehicle_update: VehicleUpdate,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    vehicle = db.query(Vehicle).filter(Vehicle.id == vehicle_id).first()
+    if not vehicle:
+        raise HTTPException(status_code=404, detail="Vehicle not found")
+    
+    # Check if new license plate already exists (and it's not the same vehicle)
+    existing = db.query(Vehicle).filter(
+        Vehicle.license_plate == vehicle_update.license_plate,
+        Vehicle.id != vehicle_id
+    ).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="License plate already exists")
+    
+    vehicle.license_plate = vehicle_update.license_plate
+    vehicle.last_update = datetime.now()
+    db.commit()
+    
+    return {"status": "success", "message": "Vehicle updated successfully"}
+
+@app.put("/api/vehicle/{vehicle_id}/toggle-active")
+async def toggle_vehicle_active(
+    vehicle_id: str,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    vehicle = db.query(Vehicle).filter(Vehicle.id == vehicle_id).first()
+    if not vehicle:
+        raise HTTPException(status_code=404, detail="Vehicle not found")
+    
+    vehicle.is_active = not vehicle.is_active
+    vehicle.last_update = datetime.now()
+    db.commit()
+    
+    return {
+        "status": "success", 
+        "is_active": vehicle.is_active,
+        "message": f"Vehicle {'activated' if vehicle.is_active else 'deactivated'} successfully"
+    }
+
+@app.delete("/api/vehicle/{vehicle_id}")
+async def delete_vehicle(
+    vehicle_id: str,
+    current_user: User = Depends(get_current_admin_user),
+    db: Session = Depends(get_db)
+):
+    vehicle = db.query(Vehicle).filter(Vehicle.id == vehicle_id).first()
+    if not vehicle:
+        raise HTTPException(status_code=404, detail="Vehicle not found")
+    
+    if vehicle.is_active:
+        raise HTTPException(
+            status_code=400, 
+            detail="Cannot delete active vehicle. Deactivate it first."
+        )
+    
+    db.delete(vehicle)
+    db.commit()
+    
+    return {"status": "success", "message": "Vehicle and all its activities deleted successfully"}
 
 # Get current user info endpoint
 

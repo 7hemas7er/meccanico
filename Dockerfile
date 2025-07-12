@@ -22,8 +22,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 RUN mkdir -p static/css static/js && \
     mkdir -p /home/data
 
-# Copy all files
+# Copy all files including migration script
 COPY . .
+COPY migrate_simple.sql .
 
 # Configure nginx for local deployment
 RUN echo ' \

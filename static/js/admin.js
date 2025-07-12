@@ -310,10 +310,24 @@ async function loadVehicles() {
                     ${vehicles.map(vehicle => {
             // Sort activities by kilometers in descending order
             const sortedActivities = vehicle.activities.sort((a, b) => b.kilometers - a.kilometers);
+            
+            // Pre-calculate button properties
+            const toggleButtonClass = vehicle.is_active 
+                ? 'bg-orange-500 hover:bg-orange-700' 
+                : 'bg-purple-500 hover:bg-purple-700';
+            const toggleButtonText = vehicle.is_active ? 'Disattiva' : 'Attiva';
+            const deleteButtonDisplay = vehicle.is_active ? 'none' : 'inline-block';
+            const rowClass = vehicle.is_active ? '' : 'opacity-50 bg-gray-100';
+            const statusBadge = vehicle.is_active 
+                ? '<span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Attivo</span>'
+                : '<span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Disattivato</span>';
 
             return `
-                        <tr>
-                            <td class="border px-4 py-2">${vehicle.license_plate}</td>
+                        <tr class="${rowClass}">
+                            <td class="border px-4 py-2">
+                                ${vehicle.license_plate}
+                                ${statusBadge}
+                            </td>
                             <td class="border px-4 py-2">
                                 ${new Date(vehicle.last_update).toLocaleDateString('it-IT')}
                             </td>
@@ -340,14 +354,29 @@ async function loadVehicles() {
                                 </ul>
                             </td>
                             <td class="border px-4 py-2">
-                                <button onclick="openActivityModal('${vehicle.id}')"
-                                        class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded mr-2">
-                                    Aggiungi Attività
-                                </button>
-                                <button onclick="regenerateQR('${vehicle.id}')"
-                                        class="bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-2 rounded">
-                                    Ristampa QR
-                                </button>
+                                <div class="flex flex-wrap gap-1">
+                                    <button onclick="openActivityModal('${vehicle.id}')"
+                                            class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded text-sm">
+                                        Aggiungi Attività
+                                    </button>
+                                    <button onclick="regenerateQR('${vehicle.id}')"
+                                            class="bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-2 rounded text-sm">
+                                        Ristampa QR
+                                    </button>
+                                    <button onclick="editVehicle('${vehicle.id}', '${vehicle.license_plate}')"
+                                            class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-1 px-2 rounded text-sm">
+                                        Modifica
+                                    </button>
+                                    <button onclick="toggleVehicleActive('${vehicle.id}', ${vehicle.is_active})"
+                                            class="${toggleButtonClass} text-white font-bold py-1 px-2 rounded text-sm">
+                                        ${toggleButtonText}
+                                    </button>
+                                    <button onclick="deleteVehicle('${vehicle.id}', ${vehicle.is_active})"
+                                            class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded text-sm"
+                                            style="display: ${deleteButtonDisplay}">
+                                        Elimina
+                                    </button>
+                                </div>
                             </td>
                         </tr>
                     `}).join('')}
@@ -544,3 +573,120 @@ async function checkAdminPermissions() {
 document.addEventListener('DOMContentLoaded', function() {
     checkAdminPermissions();
 });
+
+// Vehicle Management Functions
+function editVehicle(vehicleId, currentLicensePlate) {
+    const newLicensePlate = prompt('Modifica targa:', currentLicensePlate);
+    
+    if (newLicensePlate === null || newLicensePlate.trim() === '') {
+        return; // User cancelled or entered empty string
+    }
+    
+    if (newLicensePlate.trim() === currentLicensePlate) {
+        alert('La targa non è stata modificata.');
+        return;
+    }
+    
+    updateVehicleLicensePlate(vehicleId, newLicensePlate.trim());
+}
+
+async function updateVehicleLicensePlate(vehicleId, newLicensePlate) {
+    try {
+        const response = await fetch(`/api/vehicle/${vehicleId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                license_plate: newLicensePlate
+            })
+        });
+
+        const data = await response.json();
+        
+        if (!response.ok) {
+            if (response.status === 400 && data.detail === 'License plate already exists') {
+                alert('Errore: La targa inserita è già in uso da un altro veicolo.');
+            } else {
+                throw new Error(data.detail || 'Errore durante l\'aggiornamento');
+            }
+            return;
+        }
+
+        alert('Targa aggiornata con successo!');
+        loadVehicles(); // Reload the vehicles list
+    } catch (error) {
+        console.error('Errore:', error);
+        alert('Errore durante l\'aggiornamento della targa: ' + error.message);
+    }
+}
+
+async function toggleVehicleActive(vehicleId, currentStatus) {
+    const action = currentStatus ? 'disattivare' : 'attivare';
+    
+    if (!confirm(`Sei sicuro di voler ${action} questo veicolo?`)) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/vehicle/${vehicleId}/toggle-active`, {
+            method: 'PUT'
+        });
+
+        const data = await response.json();
+        
+        if (!response.ok) {
+            throw new Error(data.detail || 'Errore durante il cambio di stato');
+        }
+
+        const statusText = data.is_active ? 'attivato' : 'disattivato';
+        alert(`Veicolo ${statusText} con successo!`);
+        loadVehicles(); // Reload the vehicles list
+    } catch (error) {
+        console.error('Errore:', error);
+        alert('Errore durante il cambio di stato: ' + error.message);
+    }
+}
+
+async function deleteVehicle(vehicleId, isActive) {
+    if (isActive) {
+        alert('Non è possibile eliminare un veicolo attivo. Disattivalo prima.');
+        return;
+    }
+    
+    // Check if user is admin
+    const userRole = await checkAdminPermissions();
+    if (!userRole) {
+        alert('Solo gli amministratori possono eliminare i veicoli.');
+        return;
+    }
+    
+    if (!confirm('ATTENZIONE: Questa azione eliminerà il veicolo e TUTTE le sue manutenzioni in modo permanente.\n\nSei sicuro di voler continuare?')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/vehicle/${vehicleId}`, {
+            method: 'DELETE'
+        });
+
+        const data = await response.json();
+        
+        if (!response.ok) {
+            if (response.status === 403) {
+                alert('Accesso negato: Solo gli amministratori possono eliminare i veicoli.');
+            } else if (response.status === 400) {
+                alert('Errore: Non è possibile eliminare un veicolo attivo. Disattivalo prima.');
+            } else {
+                throw new Error(data.detail || 'Errore durante l\'eliminazione');
+            }
+            return;
+        }
+
+        alert('Veicolo e tutte le sue manutenzioni sono stati eliminati con successo!');
+        loadVehicles(); // Reload the vehicles list
+    } catch (error) {
+        console.error('Errore:', error);
+        alert('Errore durante l\'eliminazione: ' + error.message);
+    }
+}

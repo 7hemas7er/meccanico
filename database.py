@@ -48,6 +48,7 @@ class Vehicle(Base):
 
     id: Mapped[str] = mapped_column(primary_key=True)
     license_plate: Mapped[str] = mapped_column(String, unique=True, index=True)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     last_update: Mapped[datetime] = mapped_column(
         default=datetime.now, onupdate=datetime.now)
     activities: Mapped[List["Activity"]] = relationship(
