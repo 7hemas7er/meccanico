@@ -313,7 +313,7 @@ async function loadVehicles() {
             
             // Pre-calculate button properties
             const toggleButtonClass = vehicle.is_active 
-                ? 'bg-orange-500 hover:bg-orange-700' 
+                ? 'bg-gray-500 hover:bg-gray-700' 
                 : 'bg-purple-500 hover:bg-purple-700';
             const toggleButtonText = vehicle.is_active ? 'Disattiva' : 'Attiva';
             const deleteButtonDisplay = vehicle.is_active ? 'none' : 'inline-block';
