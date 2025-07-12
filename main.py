@@ -78,15 +78,55 @@ class VehicleResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
-app = FastAPI()
+app = FastAPI(
+    title="Vehicle Maintenance API",
+    description="Secure vehicle maintenance tracking system",
+    version="1.0.0",
+    docs_url=None,  # Disable in production
+    redoc_url=None  # Disable in production
+)
 
-# Enable CORS
+# Security headers middleware
+@app.middleware("http")
+async def add_security_headers(request: Request, call_next):
+    response = await call_next(request)
+    
+    # Security headers
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    
+    # HTTPS enforcement in production
+    if request.url.scheme == "https":
+        response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+    
+    # Content Security Policy
+    csp = (
+        "default-src 'self'; "
+        "script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://cdn.jsdelivr.net; "
+        "style-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://cdn.jsdelivr.net; "
+        "img-src 'self' data:; "
+        "font-src 'self'; "
+        "connect-src 'self'; "
+        "frame-ancestors 'none'"
+    )
+    response.headers["Content-Security-Policy"] = csp
+    
+    return response
+
+# Enable CORS with security restrictions
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "https://manutenzioni.giovanardiivo.it",
+        "https://meccanico.fly.dev",
+        "http://localhost:8000",  # Development only
+        "http://127.0.0.1:8000"  # Development only
+    ],
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type", "Accept"],
 )
 
 # Basic configuration
@@ -461,7 +501,12 @@ async def get_user_role(current_user: User = Depends(get_current_active_user)):
 
 # User management endpoints (admin only)
 @app.get("/api/users", response_model=List[UserResponse])
-async def get_all_users(db: Session = Depends(get_db), current_user: User = Depends(get_current_admin_user)):
+async def get_all_users(response: Response, db: Session = Depends(get_db), current_user: User = Depends(get_current_admin_user)):
+    # Headers anti-cache per evitare problemi con utenti eliminati
+    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+    
     users = db.query(User).all()
     return users
 
