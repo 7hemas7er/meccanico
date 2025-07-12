@@ -1,4 +1,4 @@
-# Description: Dockerfile for deploying FastAPI app to Azure App Service
+# Dockerfile for local Docker deployment
 FROM python:3.11-slim
 
 # Install nginx
@@ -25,14 +25,16 @@ RUN mkdir -p static/css static/js && \
 # Copy all files
 COPY . .
 
-# Configure nginx - Update to listen on port 8080 for Azure
+# Configure nginx for local deployment
 RUN echo ' \
     server { \
-    listen 443; \
+    listen 80; \
     location / { \
     proxy_pass http://127.0.0.1:8000; \
     proxy_set_header Host $host; \
     proxy_set_header X-Real-IP $remote_addr; \
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for; \
+    proxy_set_header X-Forwarded-Proto $scheme; \
     } \
     location /static { \
     alias /app/static; \
@@ -46,16 +48,15 @@ RUN echo '#!/bin/bash\n\
     uvicorn main:app --host 127.0.0.1 --port 8000\n\
     ' > /start.sh && chmod +x /start.sh
 
-# Set environment variables
+# Set environment variables (can be overridden at runtime)
 ENV DB_PATH=/home/data/service_records.db
 ENV SECRET_KEY=change-this-secret-key-in-production
 ENV ADMIN_USERNAME=admin
 ENV ADMIN_PASSWORD=password123
-# Update host URL to use your Azure App Service URL
-ENV HOST_URL=https://meccanico-aregf0d6g6ahf5gn.italynorth-01.azurewebsites.net/
+ENV HOST_URL=http://localhost:8080
 
-# Expose port 8080 for Azure
-EXPOSE 443
+# Expose port 80 for local deployment
+EXPOSE 80
 
 # Command to run both nginx and uvicorn
 CMD ["/start.sh"]
