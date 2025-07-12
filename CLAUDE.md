@@ -64,8 +64,11 @@ docker-compose up -d
 
 **Multi-Platform Deployment:**
 ```bash
-# Fly.io deployment
+# Fly.io deployment (with remote build)
 fly deploy
+
+# Fly.io deployment (with local build - cost optimized)
+./deploy-fly-local.sh
 
 # Cloudflare Pages (serverless)
 npm run deploy:cloudflare
@@ -127,11 +130,25 @@ Key environment variables:
 ## Running project
 - DB_PATH="./service_records.db" python main.py
 
+## Cost-Optimized Deployment
+
+**Local Build + Fly.io Deploy:**
+- **Benefits**: No build costs on Fly.io, faster deployments, better resource utilization
+- **Requirements**: Docker installed locally, flyctl authenticated
+- **Usage**: `./deploy-fly-local.sh`
+
+**Process:**
+1. Build Docker image locally
+2. Push to Fly.io registry
+3. Deploy using pre-built image
+4. **Cost Savings**: ~50-80% on build costs vs remote builds
+
 ## Deployment Configurations
 
 **Available deployment files:**
 - `docker-compose.yml` - Local Docker development with volume persistence
 - `fly.toml` - Fly.io deployment configuration with volume mounting
+- `deploy-fly-local.sh` - Cost-optimized Fly.io deployment with local Docker build
 - `wrangler.toml` - Cloudflare Pages + D1 serverless deployment
 - `Dockerfile.rhel9` - RHEL 9 enterprise Docker configuration
 - `deploy-rhel9.sh` - RHEL 9 deployment automation script
