@@ -319,8 +319,8 @@ async function loadVehicles() {
             const deleteButtonDisplay = vehicle.is_active ? 'none' : 'inline-block';
             const rowClass = vehicle.is_active ? '' : 'opacity-50 bg-gray-100';
             const statusBadge = vehicle.is_active 
-                ? '<span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Attivo</span>'
-                : '<span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Disattivato</span>';
+                ? '<span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100">Attivo</span>'
+                : '<span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-500 text-white dark:bg-red-600 dark:text-red-100">Disattivato</span>';
 
             return `
                         <tr class="${rowClass}">
