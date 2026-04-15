@@ -17,7 +17,7 @@ pyasn1==0.5.1
 pydantic==2.11.7
 pydantic_core==2.33.2
 python-jose==3.5.0
-python-multipart==0.0.19
+python-multipart==0.0.26
 qrcode==8.0
 rsa==4.9
 six==1.17.0
