@@ -172,7 +172,7 @@ Key environment variables:
 ## Key API Endpoints
 
 **Authentication:**
-- `POST /api/login` - User authentication
+- `POST /api/login` - User authentication   
 - `POST /api/logout` - User logout
 - `PUT /api/change-password` - Password change for authenticated users
 
