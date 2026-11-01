@@ -4,7 +4,8 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from passlib.context import CryptContext
 from datetime import datetime, timedelta
-from jose import JWTError, jwt
+import jwt
+from jwt import PyJWTError as JWTError
 from typing import Optional
 from pydantic import BaseModel
 import os
