@@ -4,3 +4,5 @@ vscode/
 *.pyc
 *.db
 service_records.db
+node_modules/
+.wrangler/
